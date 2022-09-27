@@ -54,8 +54,7 @@ private:
 
     std::thread thread_;
     std::mutex mutex_;
-    std::mutex cond_mutex_;
-    std::condition_variable cond_ GUARDED_BY(cond_mutex_);
+    std::condition_variable cond_ GUARDED_BY(mutex_);
 
     std::atomic<bool> running_;
     // the time to flush the buffer if no buffer is full

@@ -3,9 +3,11 @@
 #include "Log/Log.h"
 #include <iostream>
 int main(void) {
-    grt::log::Log lll;
-    lll.start();
-    std::string teee = "566";
-    lll << teee << "\n";
+    grt::log::setLogLevelPermission(grt::log::cDebug , true);
+    LOG_INFO << "INFO";
+    LOG_ERROR << "ERROR";
+    LOG_WARN << "WARN";
+    LOG_CRIT << "CRIT";
+    LOG_DEBUG << "DEBUG";
     while(1);
 }

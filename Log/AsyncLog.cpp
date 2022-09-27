@@ -54,14 +54,13 @@ void AsyncLog::threadFunc() {
     BufferVector writeBufferVec;
 
     while (this->running_) {
-        assert(newBuffer1);
-        assert(newBuffer2);
+        assert(newBuffer1 && newBuffer1->readableBytes() == 0);
+        assert(newBuffer2 && newBuffer2->readableBytes() == 0);
         assert(writeBufferVec.empty());
         {
-            std::lock_guard<std::mutex> locker(this->mutex_);
+            std::unique_lock lock(this->mutex_);
             // if no full buffer_
             if (this->vecBuffer_.empty()) {
-                std::unique_lock lock(this->cond_mutex_);
                 // wait for a while and flush buffer_;
                 this->cond_.wait_for(lock , std::chrono::seconds(this->flushInterval_));
             }
@@ -82,6 +81,7 @@ void AsyncLog::threadFunc() {
             std::cout << buffer->retrieveAllAsString();
         }
 
+        // refill newBUffer1 and newBuffer2
         if (!newBuffer1) {
             assert(!writeBufferVec.empty());
             newBuffer1 = std::move(writeBufferVec.back());
