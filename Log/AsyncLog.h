@@ -1,8 +1,8 @@
 #ifndef GRT_LOG_ASYNCLOG_H
 #define GRT_LOG_ASYNCLOG_H
 
-#include "Base/Noncopyable.h"
-#include "Buffer.h"
+#include "../Base/Noncopyable.h"
+#include "../Buffer.h"
 
 #include <mutex>
 #include <thread>
@@ -26,11 +26,16 @@ namespace log
 class AsyncLog : base::noncopyable {
 public:
 
-    AsyncLog();
+    AsyncLog(int flushInterval = 3);
     ~AsyncLog();
 
     // append data to currentBuffer_
     void append(const char* logdata , int len);
+
+    // start to work
+    void start();
+
+    bool isrunning() { return this->running_; }
 
 private:
     void threadFunc();
@@ -49,9 +54,12 @@ private:
 
     std::thread thread_;
     std::mutex mutex_;
-    std::condition_variable cond_ GUARDED_BY(mutex_);
+    std::mutex cond_mutex_;
+    std::condition_variable cond_ GUARDED_BY(cond_mutex_);
 
     std::atomic<bool> running_;
+    // the time to flush the buffer if no buffer is full
+    const int flushInterval_;
 };
 
 }

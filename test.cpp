@@ -1,11 +1,11 @@
 #define GRT_DEBUG
 #include "Buffer.h"
+#include "Log/Log.h"
 #include <iostream>
 int main(void) {
-    grt::Buffer temp;
-    std::string data(1500 , 'c');
-    temp.append(data.c_str() , 1500);
-    //std::cout << temp.readableBytes();
-    std::cout << temp.writableBytes();
-    //std::vector<char> res = temp.returnBuffer();
+    grt::log::Log lll;
+    lll.start();
+    std::string teee = "566";
+    lll << teee << "\n";
+    while(1);
 }

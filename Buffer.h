@@ -135,6 +135,12 @@ public:
         this->buffer_.shrink_to_fit();
     }
 
+    void reset(size_t newsize = cInitSize) {
+        this->readIndex_ = cPrepend;
+        this->writeIndex_ = cPrepend;
+        this->buffer_.resize(cPrepend + newsize);
+    }
+
 private:
     // return buffer_ begin address
     char* begin() {
