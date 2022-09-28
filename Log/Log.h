@@ -12,7 +12,7 @@ namespace grt
 namespace log
 {
 
-const int logMaxLength = 100;
+const int logMaxLength = 512;
 // level of log 
 enum Level {cDebug , cInfo , cWarning , cError , cCritical , };
 
@@ -42,6 +42,7 @@ public:
     Log& operator<< (const char* data);
 
 private:
+    std::string levelToString();
     Level level_;
 };
 
@@ -53,5 +54,13 @@ extern grt::log::Log LOG_DEBUG;
 extern grt::log::Log LOG_WARN;
 extern grt::log::Log LOG_ERROR;
 extern grt::log::Log LOG_CRIT;
+
+#define DEBUG grt::log::cDebug
+#define INFO grt::log::cDeinfo
+#define WARN grt::log::cWarning
+#define ERROR grt::log::cError
+#define CRIT grt::log::cCritical
+
+void LOG(grt::log::Level level , const char* format , ...);
 
 #endif

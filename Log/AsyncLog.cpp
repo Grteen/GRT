@@ -1,4 +1,6 @@
 #include "AsyncLog.h"
+#include "Log.h"
+
 #include <chrono>
 #include <iostream>
 
@@ -11,8 +13,8 @@ AsyncLog::AsyncLog(int flushInterval)
     : running_(false) ,
       mutex_() ,
       cond_() ,
-      currentBuffer_(new Buffer) ,
-      nextBuffer_(new Buffer) ,
+      currentBuffer_(new Buffer(bufferSize)) ,
+      nextBuffer_(new Buffer(bufferSize)) ,
       vecBuffer_() ,
       thread_() ,
       flushInterval_(flushInterval)
@@ -48,15 +50,16 @@ void AsyncLog::append(const char* logdata , int len) {
 
 void AsyncLog::threadFunc() {
     assert(this->running_ == true);
-    BufferPtr newBuffer1(new Buffer);
-    BufferPtr newBuffer2(new Buffer);
+    BufferPtr newBuffer1(new Buffer(this->bufferSize));
+    BufferPtr newBuffer2(new Buffer(this->bufferSize));
     // all the buffer_ wait to be writeen
     BufferVector writeBufferVec;
 
     while (this->running_) {
-        assert(newBuffer1 && newBuffer1->readableBytes() == 0);
-        assert(newBuffer2 && newBuffer2->readableBytes() == 0);
+        assert(newBuffer1 && newBuffer1->readableBytes() == 0 && newBuffer1->writableBytes() == this->bufferSize);
+        assert(newBuffer2 && newBuffer2->readableBytes() == 0 && newBuffer2->writableBytes() == this->bufferSize);
         assert(writeBufferVec.empty());
+
         {
             std::unique_lock lock(this->mutex_);
             // if no full buffer_
@@ -86,14 +89,14 @@ void AsyncLog::threadFunc() {
             assert(!writeBufferVec.empty());
             newBuffer1 = std::move(writeBufferVec.back());
             writeBufferVec.pop_back();
-            newBuffer1->reset();
+            newBuffer1->reset(this->bufferSize);
         }
 
         if (!newBuffer1) {
             assert(!writeBufferVec.empty());
             newBuffer2 = std::move(writeBufferVec.back());
             writeBufferVec.pop_back();
-            newBuffer1->reset();
+            newBuffer1->reset(this->bufferSize);
         }
 
         writeBufferVec.clear();
