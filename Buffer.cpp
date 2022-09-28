@@ -1,6 +1,7 @@
 #include "Buffer.h"
 
-using namespace grt;
+namespace grt
+{
 
 const char Buffer::cCRLF[] = "\r\n";
 
@@ -52,4 +53,6 @@ void Buffer::moveDataToFront() {
     this->readIndex_ = cPrepend;
     this->writeIndex_ = this->readIndex_ + readablebytes;
     assert(readablebytes == this->readableBytes());
+}
+
 }

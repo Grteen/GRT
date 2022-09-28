@@ -2,19 +2,33 @@
 #include "Buffer.h"
 #include "Log/Log.h"
 #include "EventLoop.h"
+#include "Channel.h"
 #include <iostream>
-
+#include <sys/timerfd.h>
+#include <unistd.h>
 grt::EventLoop* g_loop;
 
-void threadfunc() {
-    g_loop->loop();
+void timeout() {
+    printf("Time out\n");
+    g_loop->quit();
 }
-int main(void) {
-    grt::log::setLogLevelPermission(grt::log::cDebug , true);
+
+int main() {
+    grt::log::setLogLevelPermission(DEBUG , true);
     grt::EventLoop loop;
     g_loop = &loop;
 
-    std::thread t(threadfunc);
-    t.join();
-    while(1);
+    int timerfd = ::timerfd_create(CLOCK_MONOTONIC , TFD_NONBLOCK | TFD_CLOEXEC);
+    grt::Channel channel(&loop , timerfd);
+    channel.setReadCallback(timeout);
+    channel.enableReading();
+
+    struct itimerspec howlong;
+    bzero(&howlong , sizeof(howlong));
+    howlong.it_value.tv_sec = 5;
+    ::timerfd_settime(timerfd , 0 , &howlong , NULL);
+
+    loop.loop();
+
+    ::close(timerfd);
 }

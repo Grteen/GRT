@@ -1,5 +1,7 @@
 #include "EventLoop.h"
 #include "Log/Log.h"
+#include "Epoller.h"
+#include "Channel.h"
 
 #include <sys/epoll.h>
 #include <poll.h>
@@ -11,11 +13,16 @@
 namespace grt
 {
 
+const int cEpollTimeOut = 10000;
+
 __thread grt::EventLoop* oneLoopInThisThread = 0;
 
 grt::EventLoop::EventLoop() 
     : is_loop_(false) ,
-      threadId_(std::this_thread::get_id())
+      threadId_(std::this_thread::get_id()) ,
+      epoller_(new Epoller(this)) ,
+      activeChannels_() ,
+      is_quit_(false)
 {
     LOG(DEBUG , "EventLoop %x created in thread %ld" , this , threadId_);
     // if there are one loop in this thread
@@ -36,12 +43,32 @@ grt::EventLoop::~EventLoop() {
 void grt::EventLoop::loop() {
     assert(!this->is_loop_);
     this->assertInLoopThread();
-
     this->is_loop_ = true;
-    ::poll(NULL , 0 , 5 * 1000);
+    this->is_quit_ = false;
+
+    while (!this->is_quit_) {
+        this->activeChannels_.clear();
+        this->epoller_->epoll(cEpollTimeOut , &this->activeChannels_);
+        // handle all active channels' event
+        for (auto x : this->activeChannels_) {
+            x->handleEvent();
+        }
+    }
 
     LOG(DEBUG , "EventLoop %x stop looping" , this);
     this->is_loop_ = false;
+}
+
+void EventLoop::updateChannel(Channel* channel) {
+    assert(channel->ownerLoop() == this);
+    this->assertInLoopThread();
+    // let epoller to update this channel
+    this->epoller_->updateChannel(channel);
+}
+
+void grt::EventLoop::quit() {
+    this->is_quit_ = true;
+    // wakeup
 }
 
 void grt::EventLoop::assertInLoopThread() {

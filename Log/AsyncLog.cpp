@@ -4,8 +4,11 @@
 #include <chrono>
 #include <iostream>
 
-using namespace grt;
-using namespace log;
+namespace grt
+{
+
+namespace log
+{
 
 const size_t AsyncLog::bufferSize;
 
@@ -107,4 +110,8 @@ void AsyncLog::start() {
     this->running_ = true;
     this->thread_ = std::thread(std::bind(&AsyncLog::threadFunc , this));
     this->thread_.detach();
+}
+
+    
+}
 }
