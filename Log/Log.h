@@ -56,7 +56,7 @@ extern grt::log::Log LOG_ERROR;
 extern grt::log::Log LOG_CRIT;
 
 #define DEBUG grt::log::cDebug
-#define INFO grt::log::cDeinfo
+#define INFO grt::log::cInfo
 #define WARN grt::log::cWarning
 #define ERROR grt::log::cError
 #define CRIT grt::log::cCritical

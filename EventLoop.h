@@ -6,6 +6,8 @@
 #include <memory>
 
 #include "./Base/Noncopyable.h"
+#include "Callback.h"
+#include "TimerQueue.h"
 
 namespace grt
 {
@@ -27,6 +29,9 @@ public:
     bool isInLoopThread() const { return this->threadId_ == std::this_thread::get_id(); }
 
     void updateChannel(Channel* channel);
+
+    void runAfter(const TimerCallback& cb , int seconds , int milliseconds = 0, int microseconds = 0);
+
 private:
 
     void abortNotInLoopThread();
@@ -40,6 +45,8 @@ private:
 
     std::unique_ptr<Epoller> epoller_;
     ChannelList activeChannels_;
+
+    TimerQueue timerQueue_;
 };
 }
 

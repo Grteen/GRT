@@ -6,11 +6,11 @@
 #include <iostream>
 #include <sys/timerfd.h>
 #include <unistd.h>
+#include <chrono>
 grt::EventLoop* g_loop;
 
 void timeout() {
-    printf("Time out\n");
-    g_loop->quit();
+    std::cout << "timeout" << std::endl;
 }
 
 int main() {
@@ -18,17 +18,8 @@ int main() {
     grt::EventLoop loop;
     g_loop = &loop;
 
-    int timerfd = ::timerfd_create(CLOCK_MONOTONIC , TFD_NONBLOCK | TFD_CLOEXEC);
-    grt::Channel channel(&loop , timerfd);
-    channel.setReadCallback(timeout);
-    channel.enableReading();
-
-    struct itimerspec howlong;
-    bzero(&howlong , sizeof(howlong));
-    howlong.it_value.tv_sec = 5;
-    ::timerfd_settime(timerfd , 0 , &howlong , NULL);
+    g_loop->runAfter(timeout , 5);
+    std::cout << std::chrono::system_clock::now().time_since_epoch().count() << std::endl;
 
     loop.loop();
-
-    ::close(timerfd);
 }

@@ -2,6 +2,7 @@
 #include "Log/Log.h"
 #include "Epoller.h"
 #include "Channel.h"
+#include "Timer.h"
 
 #include <sys/epoll.h>
 #include <poll.h>
@@ -22,7 +23,8 @@ grt::EventLoop::EventLoop()
       threadId_(std::this_thread::get_id()) ,
       epoller_(new Epoller(this)) ,
       activeChannels_() ,
-      is_quit_(false)
+      is_quit_(false) ,
+      timerQueue_(this)
 {
     LOG(DEBUG , "EventLoop %x created in thread %ld" , this , threadId_);
     // if there are one loop in this thread
@@ -81,6 +83,11 @@ void grt::EventLoop::assertInLoopThread() {
 void grt::EventLoop::abortNotInLoopThread() {
     LOG(CRIT , "EventLoop::abortNotInLoopThread , EventLoop was created in threadId %ld " 
                "current threadId is %ld" , this->threadId_ , std::this_thread::get_id());
+}
+
+void EventLoop::runAfter(const TimerCallback& cb , int seconds , int milliseconds , int microseconds) {
+    Timer timer(cb , seconds , milliseconds , microseconds);
+    this->timerQueue_.addTimer(timer);
 }
 
 }
