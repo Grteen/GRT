@@ -4,6 +4,7 @@
 #include "Callback.h"
 
 #include <chrono>
+#include <atomic>
 
 namespace grt
 {
@@ -21,15 +22,30 @@ public:
 
     bool repeat() { return this->repeat_; }
 
+    int64_t timerId() { return this->timerId_; }
+
     std::chrono::time_point<std::chrono::system_clock> time_point() { return this->tmp_; }
 
     void runCallbackFunction() { this->cb_(); }
+
+    void setRepeat(bool on) { this->repeat_ = on; }
+
+    // reset the timer and it will be added into timerqueue again
+    void timerRepeatReset();
 
 private:   
     // time since epoch
     std::chrono::time_point<std::chrono::system_clock> tmp_;
     bool repeat_;
     TimerCallback cb_;
+
+    std::chrono::seconds second_;
+    std::chrono::milliseconds millsecond_;
+    std::chrono::microseconds micrsecond_;
+
+    int64_t timerId_;
+
+    static std::atomic_int64_t timerIdCreater;
 };
 
 }

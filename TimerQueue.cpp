@@ -84,6 +84,11 @@ bool TimerQueue::insertTimer(Timer& timer) {
     return eariest;
 }
 
+void TimerQueue::insertCancelTimer(int64_t timerId) {
+    this->loop_->assertInLoopThread();
+    this->cancelTimers_.insert(timerId);
+}
+
 void TimerQueue::resetTimerfd() {
     auto firstTimerIt = this->timers_.begin();
     Timer firstTimer = *firstTimerIt;
@@ -109,14 +114,28 @@ void TimerQueue::resetTimerfd() {
 }
 
 void TimerQueue::addTimer(Timer& timer) {
+    this->loop_->runInLoop(std::bind(&TimerQueue::addTimerInLoop , this , timer));
+}
+
+void TimerQueue::addTimerInLoop(Timer& timer) {
     this->loop_->assertInLoopThread();
     bool eariestChanged = this->insertTimer(timer);
 
-    LOG(INFO , "new Timer set");
+    LOG(INFO , "new Timer %ld set" , timer.timerId());
     if (eariestChanged == true) {
         // the first timer to wake up is changed , so the timerfd_'s wake time will also change 
         this->resetTimerfd();
     }
+}
+
+void TimerQueue::cancelTimer(int64_t timerId) {
+    this->loop_->runInLoop(std::bind(&TimerQueue::cancelTimerInLoop , this , timerId));
+}
+
+void TimerQueue::cancelTimerInLoop(int64_t timerId) {
+    this->loop_->assertInLoopThread();
+    this->insertCancelTimer(timerId);
+    LOG(DEBUG , "Timer %ld have been cancelled" , timerId);
 }
 
 std::vector<Timer> TimerQueue::getExpired() {
@@ -133,6 +152,8 @@ std::vector<Timer> TimerQueue::getExpired() {
 void TimerQueue::resetExpired(const std::vector<Timer>& expired) {
     for (auto timer : expired) {
         if (timer.repeat()) {
+            // reset timer's value and add it again
+            timer.timerRepeatReset();
             this->addTimer(timer);
         }
     }
@@ -144,10 +165,21 @@ void TimerQueue::handleRead() {
 
     std::vector<Timer> expired = this->getExpired();
 
-    for (auto timer : expired) {
-        timer.runCallbackFunction();
+    for (auto& timer : expired) {
+        auto it = this->cancelTimers_.lower_bound(timer.timerId());
+        // every expired timer call the timercallback
+        if (it == cancelTimers_.end()) {
+            // not find in cancelTimers_ , means not be canceled
+            timer.runCallbackFunction();
+        }
+        else {
+            // this timer have been canceled
+            timer.setRepeat(false);
+            this->cancelTimers_.erase(it);
+        }
     }
 
+    // check the expired timers , if repeat , reset the timer
     this->resetExpired(expired);
 }
 

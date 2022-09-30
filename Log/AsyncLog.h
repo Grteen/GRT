@@ -3,6 +3,7 @@
 
 #include "../Base/Noncopyable.h"
 #include "../Buffer.h"
+#include "../Base/Mutexoperator.h"
 
 #include <mutex>
 #include <thread>
@@ -10,13 +11,6 @@
 #include <memory>
 #include <assert.h>
 #include <atomic>
-
-#if defined(__clang__) && (!defined(SWIG))
-#define THREAD_ANNOTATION_ATTRIBUTE__(x)   __attribute__((x))
-#else
-#define THREAD_ANNOTATION_ATTRIBUTE__(x)   // no-op
-#endif
-#define GUARDED_BY(x) THREAD_ANNOTATION_ATTRIBUTE__(guarded_by(x))
 
 namespace grt
 {

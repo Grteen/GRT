@@ -8,9 +8,15 @@
 #include <unistd.h>
 #include <chrono>
 grt::EventLoop* g_loop;
+int64_t id;
 
 void timeout() {
     std::cout << "timeout" << std::endl;
+}
+
+void thr() {
+    id = g_loop->runAfter(timeout , 5);
+    g_loop->cancelTimer(id);
 }
 
 int main() {
@@ -18,8 +24,7 @@ int main() {
     grt::EventLoop loop;
     g_loop = &loop;
 
-    g_loop->runAfter(timeout , 5);
-    std::cout << std::chrono::system_clock::now().time_since_epoch().count() << std::endl;
+    std::thread t(thr);
 
     loop.loop();
 }
