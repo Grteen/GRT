@@ -3,6 +3,7 @@
 #include "Log/Log.h"
 #include "EventLoop.h"
 #include "Channel.h"
+#include "EventLoopThread.h"
 #include <iostream>
 #include <sys/timerfd.h>
 #include <unistd.h>
@@ -20,11 +21,10 @@ void thr() {
 }
 
 int main() {
+    auto it = std::this_thread::get_id();
+    std::cout << it << std::endl;
     grt::log::setLogLevelPermission(DEBUG , true);
-    grt::EventLoop loop;
-    g_loop = &loop;
-
-    std::thread t(thr);
-
-    loop.loop();
+    grt::EventLoopThread loop;
+    grt::EventLoop* l = loop.startLoop();
+    l->runAfter(timeout , 5);
 }
