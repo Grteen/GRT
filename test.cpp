@@ -11,20 +11,36 @@
 #include "Acceptor.h"
 #include "InetAddr.h"
 #include "Sockets.h"
-grt::EventLoop* g_loop;
-int64_t id;
+#include "BlockingQueue.h"
+#include "TcpConnection.h"
+using namespace grt;
 
-void Connection(int sockfd , const grt::InetAddr& peerAddr) {
-    printf("%s\n" , peerAddr.toHostPort().c_str());
-    write(sockfd , "fuck you!\n" , 9);
-    grt::sockets::close(sockfd);
+void refun(Buffer& computBuf , Buffer& outputBuf) {
+    std::cout << "read function call back" << std::endl;
+}
+
+void recom(Buffer& computBuf , Buffer& outputBuf) {
+    std::cout << "recom function call back" << std::endl;
+}
+
+void wrcom(Buffer& outputBuf) {
+    std::cout << "wrcom function call back" << std::endl;
 }
 
 int main(void) {
-    grt::InetAddr listenAddr(9877);
-    grt::EventLoop loop;
-    grt::Acceptor acceptor(&loop , listenAddr);
-    acceptor.setNewConnectionCallback(Connection);
-    acceptor.listen();
+    EventLoop loop;
+    grt::log::setLogLevelPermission(DEBUG , true);
+    //grt::log::setLogLevelPermission(WARN , true);
+
+    TcpConnection conn(&loop);
+
+    conn.setReadFunction(&refun);
+    conn.setComputFunction(&recom);
+    conn.setWriteFunction(&wrcom);
+
+    conn.onMessageCallback();
+
     loop.loop();
+
+    while (1);
 }

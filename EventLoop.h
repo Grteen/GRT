@@ -19,7 +19,7 @@ class Epoller;
 
 class EventLoop : base::noncopyable {
 public:
-    typedef std::function<void()> Functor;
+    typedef std::function<void ()> Functor;
 
     EventLoop();
     ~EventLoop();
