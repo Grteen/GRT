@@ -16,6 +16,7 @@ class Channel : base::noncopyable {
 public:
     typedef std::function<void()> EventCallback;
 
+    Channel();
     Channel(EventLoop* loop , int fd);
     ~Channel();
 
@@ -44,6 +45,9 @@ public:
 
     static std::string eventsToString(int fd , int events);
 
+    void setLoop(EventLoop* loop) { this->loop_ = loop; }
+    void setFd(int fd) { this->fd_ = fd; }
+
 private:
 
     void update();
@@ -53,7 +57,7 @@ private:
     static const int cWriteEvent;
 
     EventLoop* loop_;
-    const int fd_;
+    int fd_;
     int events_;
     int revents_;
     // condition of epoller

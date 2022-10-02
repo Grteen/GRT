@@ -8,23 +8,23 @@
 #include <sys/timerfd.h>
 #include <unistd.h>
 #include <chrono>
+#include "Acceptor.h"
+#include "InetAddr.h"
+#include "Sockets.h"
 grt::EventLoop* g_loop;
 int64_t id;
 
-void timeout() {
-    std::cout << "timeout" << std::endl;
+void Connection(int sockfd , const grt::InetAddr& peerAddr) {
+    printf("%s\n" , peerAddr.toHostPort().c_str());
+    write(sockfd , "fuck you!\n" , 9);
+    grt::sockets::close(sockfd);
 }
 
-void thr() {
-    id = g_loop->runAfter(timeout , 5);
-    g_loop->cancelTimer(id);
-}
-
-int main() {
-    auto it = std::this_thread::get_id();
-    std::cout << it << std::endl;
-    grt::log::setLogLevelPermission(DEBUG , true);
-    grt::EventLoopThread loop;
-    grt::EventLoop* l = loop.startLoop();
-    l->runAfter(timeout , 5);
+int main(void) {
+    grt::InetAddr listenAddr(9877);
+    grt::EventLoop loop;
+    grt::Acceptor acceptor(&loop , listenAddr);
+    acceptor.setNewConnectionCallback(Connection);
+    acceptor.listen();
+    loop.loop();
 }
