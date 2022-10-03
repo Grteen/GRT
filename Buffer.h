@@ -145,6 +145,8 @@ public:
         this->buffer_.resize(cPrepend + newsize);
     }
 
+    ssize_t readFd(int sockfd , int* savedErrno);
+
 private:
     // return buffer_ begin address
     char* begin() {

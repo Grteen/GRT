@@ -33,19 +33,29 @@ void TcpServer::handleConnection(int sockfd , const InetAddr& peerAddr) {
     int newConnectionId = this->currentConnId_;
     currentConnId_++;
 
-    LOG(INFO , "TcpServer::handleConnection - new connection [id = %ld] from %s" , newConnectionId , peerAddr.toHostPort().c_str());
+    LOG(INFO , "TcpServer::handleConnection - new connection [id = %ld][fd = %ld] from %s" , newConnectionId , 
+        sockfd , peerAddr.toHostPort().c_str());
     InetAddr localAddr(sockets::getLocalAddr(sockfd));
 
     // create a new connecton
     TcpConnectionPtr conn(
-        new TcpConnection(this->loop_ , newConnectionId , sockfd , localAddr , peerAddr , this->threadPool_));
+        new TcpConnection(this->loop_ , sockfd , newConnectionId , localAddr , peerAddr , this->threadPool_));
     
     this->connections_.insert(std::make_pair(newConnectionId , conn));
     conn->setConnectionCallback(this->connectionCallback_);
     conn->setReadFunction(this->readFunction_);
     conn->setComputFunction(this->computFunction_);
     conn->setWriteFunction(this->writeFunction_);
+    conn->setCloseCallback(std::bind(&TcpServer::removeConnection , this , _1));
     conn->connectEstablished();
+}
+
+void TcpServer::removeConnection(const TcpConnectionPtr& conn) {
+    this->loop_->assertInLoopThread();
+    LOG(INFO , "TcpServer::removeConnection [fd = %ld]" , conn->sockfd());
+    size_t n = this->connections_.erase(conn->connectionId());
+    assert(n == 1);
+    this->loop_->queueInLoop(std::bind(&TcpConnection::connectDestroyed , conn));
 }
 
 void TcpServer::start() {

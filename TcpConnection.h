@@ -6,6 +6,7 @@
 #include "Buffer.h"
 #include "Channel.h"
 #include "InetAddr.h"
+#include "Socket.h"
 
 #include <memory>
 
@@ -14,7 +15,6 @@ namespace grt
 
 class EventLoop;
 class ThreadPool;
-class Socket;
 
 class TcpConnection : base::noncopyable ,
                       public std::enable_shared_from_this<TcpConnection> 
@@ -28,14 +28,22 @@ public:
     void setWriteFunction(const WriteFunction& wf) { this->writeFunction_ = wf; }
     void setComputFunction(const ComputFunction& cf) { this->computFunction_ = cf; }
     void setConnectionCallback(const ConnectionCallback& cc) { this->connectionCallback_ = cc; }
+    void setCloseCallback(const CloseCallback& clc) { this->closeCallback_ = clc; }
+
+    int connectionId() { return this->connectionId_; }
+    int sockfd() { return this->socket_->sockfd(); }
 
     // enable channel's reading and call connectionCallback_;
     void connectEstablished();
 
+    void connectDestroyed();
+
 private:
-    enum State { cConnecting , cConnected , };
+    enum State { cConnecting , cConnected , cDisconnected , };
     // when channel_ is active , it's readCallback will called this function
     void handleRead();
+    // channel_'s closeCallback_ will call this function
+    void handleClose();
 
     void onMessageCallback();
     // called by onMessageCallback
@@ -51,6 +59,7 @@ private:
     ComputFunction computFunction_;
     WriteFunction writeFunction_;
     ConnectionCallback connectionCallback_;
+    CloseCallback closeCallback_;
 
     Buffer inputBuffer_;
     Buffer computOverBuffer_;

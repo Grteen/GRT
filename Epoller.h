@@ -28,6 +28,7 @@ public:
 
     // changes the interested io events
     void updateChannel(Channel* channel);
+    void removeChannel(Channel* channel);
     void update(int operation , Channel* channel);
 
     void assertInLoopThread() { this->ownerLoop_->assertInLoopThread(); }

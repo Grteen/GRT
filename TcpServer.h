@@ -32,6 +32,7 @@ public:
     void start();
 private:
     void handleConnection(int sockfd , const InetAddr& peerAddr);
+    void removeConnection(const TcpConnectionPtr& conn);
 
 private:
     typedef std::unordered_map<int , TcpConnectionPtr> connectionMap;

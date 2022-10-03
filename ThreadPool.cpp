@@ -34,11 +34,24 @@ void ThreadPool::start() {
 }
 
 void ThreadPool::puttask(const ComputFunction& cf) {
-    this->blockingQueue_->put(cf);
+    if (this->blockingQueue_->empty()) {
+        std::unique_lock<std::mutex> locker(this->mutex_);
+        this->blockingQueue_->put(cf);
+        this->cond_.notify_all();
+    }
+    else {
+        this->blockingQueue_->put(cf);
+    }
 }
 
 void ThreadPool::thrfunc() {
     while (this->started_) {
+        {
+            std::unique_lock<std::mutex> locker(this->mutex_);
+            while (this->blockingQueue_->empty()) {
+                this->cond_.wait(locker);
+            }
+        }
         auto func = this->blockingQueue_->take();
         if (func) {
             func();

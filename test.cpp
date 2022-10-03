@@ -37,7 +37,7 @@ void onConnection(const TcpConnectionPtr& conn) {
 
 int main(void) {
     EventLoop loop;
-    grt::log::setLogLevelPermission(DEBUG , true);
+    //grt::log::setLogLevelPermission(DEBUG , true);
     //grt::log::setLogLevelPermission(WARN , true);
     InetAddr listening(9877);
     TcpServer server(&loop , listening);

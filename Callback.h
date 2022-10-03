@@ -18,6 +18,7 @@ typedef std::function<void (Buffer& computBuf , Buffer& outputBuf)> ComputFuncti
 typedef std::function<void (Buffer& outputBuf)> WriteFunction;
 
 typedef std::function<void (const TcpConnectionPtr& conn)> ConnectionCallback;
+typedef std::function<void (const TcpConnectionPtr& conn)> CloseCallback;
 
 }
 #endif

@@ -34,6 +34,7 @@ public:
     bool isInLoopThread() const { return this->threadId_ == std::this_thread::get_id(); }
 
     void updateChannel(Channel* channel);
+    void removeChannel(Channel* channel);
 
     int64_t runAfter(const TimerCallback& cb , int seconds , int milliseconds = 0, int microseconds = 0);
 

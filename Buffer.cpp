@@ -1,5 +1,7 @@
 #include "Buffer.h"
 
+#include "sys/uio.h"
+
 namespace grt
 {
 
@@ -53,6 +55,30 @@ void Buffer::moveDataToFront() {
     this->readIndex_ = cPrepend;
     this->writeIndex_ = this->readIndex_ + readablebytes;
     assert(readablebytes == this->readableBytes());
+}
+
+ssize_t Buffer::readFd(int sockfd , int* savedErrno) {
+    char extrabuf[65536];
+    struct iovec vec[2];
+    const size_t writabale = this->writableBytes();
+    vec[0].iov_base = this->begin() + this->writeIndex_;
+    vec[0].iov_len = writabale;
+    vec[1].iov_base = extrabuf;
+    vec[1].iov_len = sizeof(extrabuf);
+
+    const ssize_t n = readv(sockfd , vec , 2);
+    if (n < 0) {
+        *savedErrno = errno;
+    }
+    else if (static_cast<size_t>(n) <= writabale) {
+        this->writeIndex_ += n;
+    }
+    else {
+        this->writeIndex_ = this->buffer_.size();
+        this->append(extrabuf , n - writabale);
+    }
+
+    return n;
 }
 
 }

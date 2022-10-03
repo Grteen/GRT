@@ -86,6 +86,18 @@ void Epoller::updateChannel(Channel* channel) {
     }
 }
 
+void Epoller::removeChannel(Channel* channel) {
+    this->assertInLoopThread();
+    auto res = this->channels_.find(channel->fd());
+    assert(res != this->channels_.end());
+    assert(res->second == channel);
+    assert(channel->isNoneEvent());
+
+    size_t n = this->channels_.erase(channel->fd());
+    assert(n == 1);
+    this->update(EPOLL_CTL_DEL , channel);
+}
+
 std::string Epoller::operationToString(int operation) {
     std::string res;
     if (operation == EPOLL_CTL_ADD) {

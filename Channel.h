@@ -26,6 +26,7 @@ public:
     void setReadCallback(const EventCallback& cb) { this->readCallback_ = cb; }
     void setWriteCallback(const EventCallback& cb) { this->writeCallback_ = cb; }
     void setErrorCallback(const EventCallback& cb) { this->errorCallback_ = cb; }
+    void setCloseCallback(const EventCallback& cb) { this->closeCallback_ = cb; }
 
     int fd() const { return this->fd_; }
     int condition() const {return this->condition_; }
@@ -36,6 +37,7 @@ public:
 
     EventLoop* ownerLoop() { return this->loop_; }
 
+    void disableAll() { this->events_ = cNoneEvent; this->update(); }
     void enableReading() { this->events_ |= cReadEvent; this->update(); }
 
     // all condition of Channel
@@ -66,6 +68,9 @@ private:
     EventCallback readCallback_;
     EventCallback writeCallback_;
     EventCallback errorCallback_;
+    EventCallback closeCallback_;
+
+    bool eventHandling_;
 };
 
 }

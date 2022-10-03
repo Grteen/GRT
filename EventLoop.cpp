@@ -87,6 +87,12 @@ void EventLoop::updateChannel(Channel* channel) {
     this->epoller_->updateChannel(channel);
 }
 
+void EventLoop::removeChannel(Channel* channel) {
+    assert(channel->ownerLoop() == this);
+    this->assertInLoopThread();
+    this->epoller_->removeChannel(channel);
+}
+
 void grt::EventLoop::quit() {
     this->is_quit_ = true;
     // wakeup

@@ -22,17 +22,26 @@ Channel::Channel(EventLoop* loop , int fd)
       fd_(fd) ,
       events_(0) ,
       revents_(0) ,
-      condition_(cNew)
+      condition_(cNew) ,
+      eventHandling_(false)
 {
 
 }
 
-Channel::~Channel() {}
+Channel::~Channel() {
+    assert(this->eventHandling_ == false);
+}
 
 void Channel::handleEvent() {
+    this->eventHandling_ = true;
     // error event
     if (this->revents_ & EPOLLERR) {
         if (this->errorCallback_) this->errorCallback_();
+    }
+    // close event
+    if ((this->revents_ & EPOLLHUP) && !(this->revents_ & EPOLLIN)) {
+        LOG(WARN , "Channel::handleEvent get POLLHUB");
+        if (this->closeCallback_) this->closeCallback_();
     }
     // read event
     if (this->revents_ & (EPOLLPRI | EPOLLHUP | EPOLLIN)) {
@@ -42,6 +51,8 @@ void Channel::handleEvent() {
     if (this->revents_ & EPOLLOUT) {
         if (this->writeCallback_) this->writeCallback_();
     }
+
+    this->eventHandling_ = false;
 }
 
 void Channel::update() {

@@ -2,11 +2,14 @@
 #define GRT_THREADPOOL_H
 
 #include "Base/Noncopyable.h"
+#include "Base/Mutexoperator.h"
 
 #include <memory>
 #include <vector>
 #include <thread>
 #include <functional>
+#include <mutex>
+#include <condition_variable>
 
 namespace grt
 {
@@ -39,6 +42,9 @@ private:
 
     std::unique_ptr<BlockingQueue> blockingQueue_;
     std::vector<std::thread> threads_;
+
+    std::condition_variable cond_ GUARDED_BY(this->mutex_);
+    std::mutex mutex_;
 };
 
 }

@@ -24,6 +24,8 @@ public:
 
     ComputFunction take();
     void put(const ComputFunction& func);
+
+    bool empty() { return this->bufQueue_.empty() && this->queue_.empty(); }
 private:
     void moveBuf();
 
