@@ -13,34 +13,38 @@
 #include "Sockets.h"
 #include "BlockingQueue.h"
 #include "TcpConnection.h"
+#include "TcpServer.h"
 using namespace grt;
 
-void refun(Buffer& computBuf , Buffer& outputBuf) {
-    std::cout << "read function call back" << std::endl;
+void refun(Buffer& inputBuffer , Buffer& computBuf) {
+    std::string test = "how are you!";
+    computBuf.append(test);
 }
 
 void recom(Buffer& computBuf , Buffer& outputBuf) {
-    std::cout << "recom function call back" << std::endl;
+    std::string res = computBuf.retrieveAllAsString();
+    outputBuf.append("6666");
 }
 
 void wrcom(Buffer& outputBuf) {
-    std::cout << "wrcom function call back" << std::endl;
+    std::string res = outputBuf.retrieveAllAsString();
+    std::cout << res << std::endl;
+}
+
+void onConnection(const TcpConnectionPtr& conn) {
+    std::cout << "tcpconnection here" << std::endl;
 }
 
 int main(void) {
     EventLoop loop;
     grt::log::setLogLevelPermission(DEBUG , true);
     //grt::log::setLogLevelPermission(WARN , true);
-
-    TcpConnection conn(&loop);
-
-    conn.setReadFunction(&refun);
-    conn.setComputFunction(&recom);
-    conn.setWriteFunction(&wrcom);
-
-    conn.onMessageCallback();
-
+    InetAddr listening(9877);
+    TcpServer server(&loop , listening);
+    server.setConnectionCallback(onConnection);
+    server.setReadFunction(refun);
+    server.setComputFunction(recom);
+    server.setWriteFunction(wrcom);
+    server.start();
     loop.loop();
-
-    while (1);
 }

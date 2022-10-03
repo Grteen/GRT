@@ -1,7 +1,7 @@
 #include "ThreadPool.h"
 #include "BlockingQueue.h"
 #include "TcpConnection.h"
-#include <iostream>
+#include "Log/Log.h"
 
 namespace grt
 {
@@ -20,12 +20,17 @@ ThreadPool::~ThreadPool() {
 }
 
 void ThreadPool::start() {
-    for (int i = 0 ; i < this->threadNumber_ ; i++) {
-        std::thread t(&ThreadPool::thrfunc , this);
-        this->threads_.push_back(std::move(t));
-    }
+    if (!this->started_) {
+        for (int i = 0 ; i < this->threadNumber_ ; i++) {
+            std::thread t(&ThreadPool::thrfunc , this);
+            this->threads_.push_back(std::move(t));
+        }
 
-    this->started_ = true;
+        this->started_ = true;
+    }
+    else {
+        LOG(WARN , "thread pool has been started");
+    }
 }
 
 void ThreadPool::puttask(const ComputFunction& cf) {

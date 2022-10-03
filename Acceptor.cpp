@@ -30,7 +30,7 @@ void Acceptor::handleRead() {
     int connfd = this->acceptsockfd_.accept(&peerAddr);
     if (connfd >= 0) {
         if (this->connectionCallback_) {
-            // call back the function
+            // call back the function (set by TcpServer(user))
             this->connectionCallback_(connfd , peerAddr);
         }
         else {

@@ -27,6 +27,8 @@ public:
 
     void puttask(const ComputFunction& cf);
 
+    bool checkStart() { return this->started_; }
+
 private:
     // threads_ will call this function
     void thrfunc();

@@ -23,7 +23,7 @@ public:
     // according to different revents to handle Event
     void handleEvent();
 
-    void setReadCallback(const EventCallback& cb) { this->readCalback_ = cb; }
+    void setReadCallback(const EventCallback& cb) { this->readCallback_ = cb; }
     void setWriteCallback(const EventCallback& cb) { this->writeCallback_ = cb; }
     void setErrorCallback(const EventCallback& cb) { this->errorCallback_ = cb; }
 
@@ -63,7 +63,7 @@ private:
     // condition of epoller
     int condition_;    
 
-    EventCallback readCalback_;
+    EventCallback readCallback_;
     EventCallback writeCallback_;
     EventCallback errorCallback_;
 };

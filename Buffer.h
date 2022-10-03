@@ -117,6 +117,10 @@ public:
         this->append(static_cast<const char*>(data) , len);
     }
 
+    void append(const std::string& data) {
+        this->append(data.c_str() , data.size());
+    }
+
     // add data in prepend
     void prepend(const void* data , size_t len) {
         assert(len <= this->prependableBytes());

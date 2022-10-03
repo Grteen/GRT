@@ -36,7 +36,7 @@ void Channel::handleEvent() {
     }
     // read event
     if (this->revents_ & (EPOLLPRI | EPOLLHUP | EPOLLIN)) {
-        if (this->readCalback_) this->readCalback_();
+        if (this->readCallback_) this->readCallback_();
     }
     // write event
     if (this->revents_ & EPOLLOUT) {

@@ -75,6 +75,16 @@ void close(int sockfd) {
     }
 }
 
+struct sockaddr_in getLocalAddr(int sockfd) {
+    struct sockaddr_in localaddr;
+    bzero(&localaddr , sizeof(localaddr));
+    socklen_t addrlen = sizeof(localaddr);
+    if (::getsockname(sockfd , (sockaddr*)&localaddr , &addrlen) < 0) {
+        LOG(ERROR , "sockets::getLocalAddr");
+    }
+    return localaddr;
+}
+
 
 }
 }

@@ -22,6 +22,7 @@ public:
     Acceptor(EventLoop* loop , const InetAddr& addr);
 
     void listen();
+    bool listening() { return this->listening_; }
 
     void setNewConnectionCallback(const newConnectionCallback& cb) { this->connectionCallback_ = cb; } 
 private:
@@ -31,6 +32,7 @@ private:
     EventLoop* loop_;
     Socket acceptsockfd_;
     Channel acceptChannel_;
+    // set by TcpServer
     newConnectionCallback connectionCallback_;
     bool listening_;
 };

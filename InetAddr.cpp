@@ -18,6 +18,12 @@ InetAddr::InetAddr(const std::string& ip , uint16_t port) {
     sockets::fromHostPort(ip.c_str() , port , &this->addr_);
 }
 
+InetAddr::InetAddr(const struct sockaddr_in& addr) 
+    : addr_(addr)
+{
+    
+}
+
 std::string InetAddr::toHostPort() const {
     char buf[32];
     sockets::toHostPort(buf , sizeof(buf) , this->addr_);
