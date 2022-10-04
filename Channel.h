@@ -38,7 +38,11 @@ public:
     EventLoop* ownerLoop() { return this->loop_; }
 
     void disableAll() { this->events_ = cNoneEvent; this->update(); }
+    void disableWriting() { this->events_ &= ~cWriteEvent; this->update(); }
     void enableReading() { this->events_ |= cReadEvent; this->update(); }
+    void enableWriting() { this->events_ |= cWriteEvent; this->update(); }   
+
+    bool isWriting() const { return this->events_ & cWriteEvent; }
 
     // all condition of Channel
     static const int cNew;

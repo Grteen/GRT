@@ -8,6 +8,7 @@
 #include <sys/epoll.h>
 #include <poll.h>
 #include <sys/eventfd.h>
+#include <signal.h>
 
 
 // one loop per thread
@@ -15,6 +16,16 @@
 
 namespace grt
 {
+
+// ignore SIGPIPE
+class IgnoreSigPipe {
+public:
+    IgnoreSigPipe() {
+        ::signal(SIGPIPE , SIG_IGN);
+    }
+};
+
+IgnoreSigPipe ignoreSigPipeObject;
 
 const int cEpollTimeOut = 10000;
 

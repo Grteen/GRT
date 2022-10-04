@@ -38,12 +38,21 @@ public:
 
     void connectDestroyed();
 
+    // send message (message comes from outputBuffer_)
+    void send();
+
+    void shutdown();
+
+    void setTcpNoDelay(bool on);
+
 private:
-    enum State { cConnecting , cConnected , cDisconnected , };
+    enum State { cConnecting , cConnected , cDisconnected , cDisconnecting , };
     // when channel_ is active , it's readCallback will called this function
     void handleRead();
     // channel_'s closeCallback_ will call this function
     void handleClose();
+    // write all outputBuffer_
+    void handleWrite();
 
     void onMessageCallback();
     // called by onMessageCallback
@@ -51,6 +60,11 @@ private:
     void computOverCallback(Buffer& outputBuf);
 
     void setState(State state) { this->state_ = state; }
+
+    // send all outputBuffer_
+    void sendInLoop();
+
+    void shutdownInLoop();
 
 private:
     EventLoop* loop_;

@@ -85,6 +85,12 @@ struct sockaddr_in getLocalAddr(int sockfd) {
     return localaddr;
 }
 
+void shutdownWrite(int sockfd) {
+    if (::shutdown(sockfd , SHUT_WR) < 0) {
+        LOG(ERROR , "sockets::shutdownWrite");
+    }
+}
+
 
 }
 }

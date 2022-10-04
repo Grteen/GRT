@@ -22,6 +22,10 @@ public:
     int accept(InetAddr* peeraddr);
 
     int sockfd() { return this->sockfd_; }
+
+    void shutdownWrite();
+
+    void setTcpNoDelay(bool on);
 private:
 
 private:

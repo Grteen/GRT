@@ -53,6 +53,8 @@ void fromHostPort(const char * ip , uint16_t port , struct sockaddr_in* addr);
 
 struct sockaddr_in getLocalAddr(int sockfd);
 
+void shutdownWrite(int sockfd);
+
 }
 
 }

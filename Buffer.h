@@ -145,6 +145,10 @@ public:
         this->buffer_.resize(cPrepend + newsize);
     }
 
+    // return all message in Buffer
+    const char* peek() const { return this->begin() + this->readIndex_; }
+
+
     ssize_t readFd(int sockfd , int* savedErrno);
 
 private:

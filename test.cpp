@@ -17,8 +17,8 @@
 using namespace grt;
 
 void refun(Buffer& inputBuffer , Buffer& computBuf) {
-    std::string test = "how are you!";
-    computBuf.append(test);
+    computBuf.append(inputBuffer.retrieveAllAsString());
+    std::cout << "read function called" << std::endl;
 }
 
 void recom(Buffer& computBuf , Buffer& outputBuf) {
@@ -27,8 +27,7 @@ void recom(Buffer& computBuf , Buffer& outputBuf) {
 }
 
 void wrcom(Buffer& outputBuf) {
-    std::string res = outputBuf.retrieveAllAsString();
-    std::cout << res << std::endl;
+
 }
 
 void onConnection(const TcpConnectionPtr& conn) {
@@ -37,7 +36,7 @@ void onConnection(const TcpConnectionPtr& conn) {
 
 int main(void) {
     EventLoop loop;
-    //grt::log::setLogLevelPermission(DEBUG , true);
+    grt::log::setLogLevelPermission(DEBUG , true);
     //grt::log::setLogLevelPermission(WARN , true);
     InetAddr listening(9877);
     TcpServer server(&loop , listening);

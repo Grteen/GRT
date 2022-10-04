@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <netinet/tcp.h>
 
 namespace grt
 {
@@ -43,5 +44,14 @@ int Socket::accept(InetAddr* peeraddr) {
 
     return connfd;
 }   
+
+void Socket::shutdownWrite() {
+    sockets::shutdownWrite(this->sockfd_);
+}
+
+void Socket::setTcpNoDelay(bool on) {
+    int val = on ? 1 : 0;
+    setsockopt(this->sockfd_ , IPPROTO_TCP , TCP_NODELAY , &val , sizeof(val));
+}
 
 }
