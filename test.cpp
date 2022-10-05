@@ -31,7 +31,7 @@ void wrcom(Buffer& outputBuf) {
 }
 
 void onConnection(const TcpConnectionPtr& conn) {
-    std::cout << "tcpconnection here" << std::endl;
+    std::cout << std::this_thread::get_id() << std::endl;
 }
 
 int main(void) {
@@ -44,6 +44,8 @@ int main(void) {
     server.setReadFunction(refun);
     server.setComputFunction(recom);
     server.setWriteFunction(wrcom);
+    server.setIOThreadNum(2);
+    server.setComputThreadNum(2);
     server.start();
     loop.loop();
 }

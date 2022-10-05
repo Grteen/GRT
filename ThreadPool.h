@@ -32,6 +32,10 @@ public:
 
     bool checkStart() { return this->started_; }
 
+    void setThreadNum(int threadnum) { this->threadNumber_ = threadnum; }
+
+    bool isEmpty() { return this->threads_.empty(); }
+
 private:
     // threads_ will call this function
     void thrfunc();

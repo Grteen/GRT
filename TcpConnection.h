@@ -45,6 +45,8 @@ public:
 
     void setTcpNoDelay(bool on);
 
+    EventLoop* getLoop() { return this->loop_; }
+
 private:
     enum State { cConnecting , cConnected , cDisconnected , cDisconnecting , };
     // when channel_ is active , it's readCallback will called this function

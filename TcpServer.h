@@ -13,6 +13,7 @@ namespace grt
 
 class EventLoop;
 class Acceptor;
+class EventLoopThreadPool;
 
 class TcpServer : base::noncopyable {
 public:
@@ -30,9 +31,14 @@ public:
     void setConnectionCallback(const ConnectionCallback& cc) { this->connectionCallback_ = cc; }
 
     void start();
+
+    void setIOThreadNum(int threadnum);
+    void setComputThreadNum(int threadnum);
 private:
     void handleConnection(int sockfd , const InetAddr& peerAddr);
     void removeConnection(const TcpConnectionPtr& conn);
+    
+    void removeConnectionInLoop(const TcpConnectionPtr& conn);
 
 private:
     typedef std::unordered_map<int , TcpConnectionPtr> connectionMap;
@@ -51,6 +57,7 @@ private:
 
     int currentConnId_;
     std::shared_ptr<ThreadPool> threadPool_;
+    std::unique_ptr<EventLoopThreadPool> loopPool_;
 };
 
 }

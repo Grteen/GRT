@@ -39,10 +39,18 @@ void TcpConnection::onMessageCallback() {
         if (this->readFunction_) {
             this->readFunction_(this->inputBuffer_ , this->computOverBuffer_);
             if (this->computFunction_) {
-                this->threadPool_->puttask(std::bind(&TcpConnection::readOverCallback , shared_from_this() , 
+                if (!this->threadPool_->isEmpty()) {
+                    // computThreadPool can work
+                    this->threadPool_->puttask(std::bind(&TcpConnection::readOverCallback , shared_from_this() , 
                                                      std::ref(this->computOverBuffer_) , std::ref(this->outputBuffer_)));
+                }
+                else {
+                    // no computThreadPool
+                    this->readOverCallback(this->computOverBuffer_ , this->outputBuffer_);
+                }
             }
             else if (this->writeFunction_) {
+                // no computFunction but has writeFunction , so call wirteFunction immediately
                 this->writeFunction_(this->outputBuffer_);
             }
         }
