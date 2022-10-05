@@ -8,7 +8,7 @@
 不再使用boost库，全部用相应的C++11函数取代
 
 改变muduo中onMessageCallback由所在IO线程直接调用的情况
-将其分解为三个函数 ：readFunction , computFunction , writeFunction
+将其分解为三个函数 ：readFunction , computFunction , writeFunction  
 readFunction 和 writeFunction 由所在IO线程调用 ， computFunction则由本库中自制的threadPool调用和计算  
 即更改为了reactors + threadPool的并发模型  
 同时用户可以自主设置IO线程和计算线程的数量
