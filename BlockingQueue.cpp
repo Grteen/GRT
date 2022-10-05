@@ -23,7 +23,7 @@ BlockingQueue::ComputFunction BlockingQueue::take() {
 
         if (this->queue_.empty() && !this->bufQueue_.empty()) {
             this->moving_ = true;
-            std::unique_lock<std::mutex> locker(this->bufMutex_);
+            std::unique_lock<std::mutex> lock(this->bufMutex_);
             this->moveBuf();
             this->moving_ = false;
             this->cond_.notify_all();
@@ -57,6 +57,10 @@ void BlockingQueue::moveBuf() {
         this->queue_.push(std::move(this->bufQueue_.front()));
         this->bufQueue_.pop();
     }
+}
+
+bool BlockingQueue::empty() {
+    return this->queue_.empty() && this->bufQueue_.empty();
 }
 
 }

@@ -21,12 +21,11 @@ ThreadPool::~ThreadPool() {
 
 void ThreadPool::start() {
     if (!this->started_) {
+        this->started_ = true;
         for (int i = 0 ; i < this->threadNumber_ ; i++) {
             std::thread t(&ThreadPool::thrfunc , this);
             this->threads_.push_back(std::move(t));
         }
-
-        this->started_ = true;
     }
     else {
         LOG(WARN , "thread pool has been started");
@@ -34,8 +33,8 @@ void ThreadPool::start() {
 }
 
 void ThreadPool::puttask(const ComputFunction& cf) {
+    std::unique_lock<std::mutex> locker(this->mutex_);
     if (this->blockingQueue_->empty()) {
-        std::unique_lock<std::mutex> locker(this->mutex_);
         this->blockingQueue_->put(cf);
         this->cond_.notify_all();
     }
@@ -46,13 +45,15 @@ void ThreadPool::puttask(const ComputFunction& cf) {
 
 void ThreadPool::thrfunc() {
     while (this->started_) {
+        ComputFunction func;
         {
             std::unique_lock<std::mutex> locker(this->mutex_);
             while (this->blockingQueue_->empty()) {
                 this->cond_.wait(locker);
             }
+            func = this->blockingQueue_->take();
         }
-        auto func = this->blockingQueue_->take();
+
         if (func) {
             func();
         }

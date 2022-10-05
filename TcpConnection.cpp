@@ -7,6 +7,8 @@
 #include <unistd.h>
 #include <iostream>
 
+extern int count;
+
 namespace grt
 {
 
@@ -33,7 +35,7 @@ TcpConnection::~TcpConnection() {
 void TcpConnection::onMessageCallback() {
     this->loop_->assertInLoopThread();
     ssize_t n = this->inputBuffer_.readFd(this->socket_->sockfd() , NULL);
-
+    count++;
     if (n > 0) {
         // message call back
         if (this->readFunction_) {
@@ -105,7 +107,6 @@ void TcpConnection::connectDestroyed() {
     this->setState(cDisconnected);
     this->channel_->disableAll();
     // connectionCloseCallback
-
     this->loop_->removeChannel(this->channel_.get());
 }
 

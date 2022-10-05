@@ -55,8 +55,8 @@ void TcpServer::handleConnection(int sockfd , const InetAddr& peerAddr) {
 }
 
 void TcpServer::removeConnection(const TcpConnectionPtr& conn) {
+    this->loop_->runInLoop(std::bind(&TcpServer::removeConnectionInLoop , this , conn));
 }
-
 void TcpServer::removeConnectionInLoop(const TcpConnectionPtr& conn) {
     this->loop_->assertInLoopThread();
     LOG(INFO , "TcpServer::removeConnection [fd = %ld]" , conn->sockfd());
@@ -64,7 +64,7 @@ void TcpServer::removeConnectionInLoop(const TcpConnectionPtr& conn) {
     assert(n == 1);
     // connectDestroyed must be in connection's ownerLoop
     EventLoop* ioLoop = conn->getLoop();
-    this->loop_->queueInLoop(std::bind(&TcpConnection::connectDestroyed , conn));
+    ioLoop->queueInLoop(std::bind(&TcpConnection::connectDestroyed , conn));
 }
 
 void TcpServer::setIOThreadNum(int threadnum) {

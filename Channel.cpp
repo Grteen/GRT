@@ -32,6 +32,7 @@ Channel::~Channel() {
     assert(this->eventHandling_ == false);
 }
 
+int count = 0;
 void Channel::handleEvent() {
     this->eventHandling_ = true;
     // error event

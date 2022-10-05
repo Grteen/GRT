@@ -92,7 +92,6 @@ void Epoller::removeChannel(Channel* channel) {
     assert(res != this->channels_.end());
     assert(res->second == channel);
     assert(channel->isNoneEvent());
-
     size_t n = this->channels_.erase(channel->fd());
     assert(n == 1);
     this->update(EPOLL_CTL_DEL , channel);
