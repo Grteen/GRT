@@ -23,11 +23,11 @@ thread mutex condition等全部改用C++11 而不是muduo库中自制的那些
 
 用C++11的std::chrono代替了原来muduo中的TimeStamp,并且简化了Timer以及TimerQueue的设计
 
-#计划
-修BUG 修BUG 修BUG
-精简代码 精简代码 精简代码
-加入http处理部分
+# 计划
+修BUG 修BUG 修BUG   
+精简代码 精简代码 精简代码  
+加入http处理部分  
 
-#最后
-远离socket 远离socket 远离socket
-不要造轮子 不要造轮子 不要造轮子
+# 最后
+远离socket 远离socket 远离socket  
+不要造轮子 不要造轮子 不要造轮子  
