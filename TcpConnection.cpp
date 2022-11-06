@@ -7,8 +7,6 @@
 #include <unistd.h>
 #include <iostream>
 
-extern int count;
-
 namespace grt
 {
 
@@ -35,7 +33,6 @@ TcpConnection::~TcpConnection() {
 void TcpConnection::onMessageCallback() {
     this->loop_->assertInLoopThread();
     ssize_t n = this->inputBuffer_.readFd(this->socket_->sockfd() , NULL);
-    count++;
     if (n > 0) {
         // message call back
         if (this->readFunction_) {

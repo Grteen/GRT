@@ -3,6 +3,7 @@
 
 #include "./Base/Noncopyable.h"
 #include "TcpConnection.h"
+#include "EventLoop.h"
 #include "Callback.h"
 
 #include <memory>
