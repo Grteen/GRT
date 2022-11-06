@@ -36,7 +36,6 @@ writeFunction是outputBuffer被发送之前最后进行处理的函数，此函�
 # 计划
 修BUG 修BUG 修BUG   
 精简代码 精简代码 精简代码  
-加入http处理部分  
 
 # 最后
 远离socket 远离socket 远离socket  
