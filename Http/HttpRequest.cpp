@@ -6,6 +6,25 @@ namespace grt
 namespace http
 {
 
+size_t HttpHave(std::string& targetString) {
+    size_t headerLength = http::HttpFind(targetString);
+    if (headerLength == 0) {
+        return 0;
+    }
+    
+    std::string httpHeaders(targetString.begin() , targetString.begin() + headerLength);
+    http::HttpRequest hq;
+    hq.ParseHttpMessage(httpHeaders);
+    // do not have the header Content-Length
+    std::string bodyLength = hq.HasContentLength();
+    if (bodyLength == "") {
+        return headerLength;
+    }
+    else {
+        return headerLength + stoi(bodyLength) + 2;
+    }
+}
+
 HttpRequest::HttpRequest() {
 
 }
@@ -24,8 +43,12 @@ void HttpRequest::ParseURLByLines(std::vector<std::string>& URL) {
 }
 
 void HttpRequest::ParseURL(std::string& URL) {
-    std::vector<std::string> URLlines = URLSplit(URL);
-    this->ParseURLByLines(URLlines);
+    std::regex reg("[^ ]+ ([^ ]+)");
+    std::smatch sm;
+    regex_search(URL , sm , reg);
+    this->requestURL = sm[1];
+    // std::vector<std::string> URLlines = URLSplit(URL);
+    // this->ParseURLByLines(URLlines);
 }
 
 void HttpRequest::ParseRequestWay(std::string& requestLine) {

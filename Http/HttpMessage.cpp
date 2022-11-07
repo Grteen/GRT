@@ -17,9 +17,21 @@ std::vector<std::string> HttpSplit(std::string& httpMessage) {
     return StringSplit(httpMessage , regexString);
 }
 
-std::vector<std::string> URLSplit(std::string& URL) {
-    std::string regexString("&");
-    return StringSplit(URL , regexString);
+std::vector<std::string> URLSplit(std::string& URL , std::string& regexString) {
+    std::string regexstring(regexString);
+    return StringSplit(URL , regexstring);
+}
+
+size_t HttpFind(std::string& targetString) {
+    std::regex reg("([.\\s\\S]+)\r\n\r\n");
+    std::smatch sm;
+    // if regex match the http message
+    if (std::regex_search(targetString , sm , reg) == true) {
+        return sm[0].length();
+    }
+    else {
+        return 0;
+    }
 }
 
 HttpMessage::HttpMessage() {
@@ -42,6 +54,16 @@ void HttpMessage::ParseHttpMessageByLines(std::vector<std::string>& rawMessageLi
 void HttpMessage::ParseHttpMessage(std::string& httpMessage) {
     std::vector<std::string> httpMessageLines = HttpSplit(httpMessage);
     this->ParseHttpMessageByLines(httpMessageLines);
+}
+
+std::string HttpMessage::HasContentLength() {
+    auto iter = this->KeyValueMessage.find("Content-Length");
+    if (iter == this->KeyValueMessage.end()) {
+        return "";
+    }
+    else {
+        return iter->second;
+    }
 }
 
 }

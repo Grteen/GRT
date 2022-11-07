@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <assert.h>
 #include <string>
+#include <iostream>
 
 namespace grt
 {
@@ -60,6 +61,12 @@ public:
     // find \r\n and return the address of buffer_
     const char* findCRLF() const {
         const char* crlf = std::search(this->readAddr() , this->writeAddr() , cCRLF , cCRLF + 2);
+        return crlf == this->writeAddr() ? NULL : crlf;
+    }
+
+    // find \r\n\r\n and return the address of buffer_
+    const char* findDCRLF() const {
+        const char* crlf = std::search(this->readAddr() , this->writeAddr() , DcCRLF , DcCRLF + 4);
         return crlf == this->writeAddr() ? NULL : crlf;
     }
 
@@ -148,7 +155,6 @@ public:
     // return all message in Buffer
     const char* peek() const { return this->begin() + this->readIndex_; }
 
-
     ssize_t readFd(int sockfd , int* savedErrno);
 
 private:
@@ -172,6 +178,7 @@ private:
     size_t writeIndex_;
 
     static const char cCRLF[];
+    static const char DcCRLF[];
 };
 }
 #endif

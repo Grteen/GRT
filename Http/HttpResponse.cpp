@@ -15,6 +15,8 @@ HttpResponse::~HttpResponse() {
 }
 
 void HttpResponse::AddHeader(const std::string& key , const std::string value) {
+    if (this->KeyValueMessage.find(key) != this->KeyValueMessage.end()) 
+        this->KeyValueMessage.erase(key);
     this->KeyValueMessage.insert(std::make_pair(key , value));
 }
 

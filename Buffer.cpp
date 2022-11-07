@@ -6,6 +6,7 @@ namespace grt
 {
 
 const char Buffer::cCRLF[] = "\r\n";
+const char Buffer::DcCRLF[] = "\r\n\r\n";
 
 Buffer::Buffer(size_t initSize)
     : buffer_(cPrepend + initSize) ,
