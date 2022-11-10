@@ -153,7 +153,10 @@ public:
     }
 
     // return all message in Buffer
-    const char* peek() const { return this->begin() + this->readIndex_; }
+    std::string peek() const { 
+        std::string res(this->begin() + this->readIndex_ , this->writeIndex_ - this->readIndex_);
+        return res; 
+    }
 
     ssize_t readFd(int sockfd , int* savedErrno);
 

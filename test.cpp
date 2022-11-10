@@ -13,13 +13,13 @@ void readFunction(const TcpConnectionPtr& conn) {
 }
 
 void computFunction(const TcpConnectionPtr& conn) {
-    string str(conn->inputBuffer_.peek());
+    string str = (conn->inputBuffer()->peek());
     size_t length = http::HttpHave(str);
     if (length == 0) {
         return;
     }
-    while (length <= conn->inputBuffer_.readableBytes()) {
-        string http = conn->inputBuffer_.retrieveAsString(length);
+    while (length <= conn->inputBuffer()->readableBytes()) {
+        string http = conn->inputBuffer()->retrieveAsString(length);
         // cout << http << endl;
         length = http::HttpHave(str);
         http::HttpRequest hq;
@@ -28,10 +28,10 @@ void computFunction(const TcpConnectionPtr& conn) {
         hr.setHttpVersion(hq.HttpVersion());
         if (hq.RequestURL() == "/FAV") {
             hr.SetResponseBody("NB");
-            hr.AddHeader("Content-Length" , "1321");
+            // hr.AddHeader("Content-Length" , "1321");
             hr.AddHeader("Content-Length" , "2");
         }
-        else if (hq.RequestURL() == "favicon.ico") {
+        else if (hq.RequestURL() == "/favicon.ico") {
             hr.SetResponseBody("TEMP");
             hr.AddHeader("Content-Length" , "4");
         }
@@ -41,15 +41,15 @@ void computFunction(const TcpConnectionPtr& conn) {
         }
         hr.SetStatusCode("200" , "OK");
         hr.AddHeader("Content-Type" , "text/plain;charset=utf-8");
-        conn->outputBuffer_.append("TESTING HERE");
-        conn->send();
-        conn->outputBuffer_.append(hr.GenerateResponseString());
-        // LOG(INFO , "%s" , "message send ok");
+        conn->outputBuffer()->append(hr.GenerateResponseString());
     }
 }
 
 void writeFunction(const TcpConnectionPtr& conn) {
-
+    LOG(INFO , "%s" , "message send ok");
+    if (conn->outputBuffer()->readableBytes()) {
+        conn->send();
+    }
 }
 
 void onConnection(const TcpConnectionPtr& conn) {
@@ -60,6 +60,7 @@ int main(void) {
     EventLoop loop;
     InetAddr listenAddr(9877);
     TcpServer server(&loop , listenAddr);
+    
 
     server.setReadFunction(readFunction);
     server.setComputFunction(computFunction);

@@ -40,12 +40,11 @@ void TcpConnection::onMessageCallback() {
             if (this->computFunction_) {
                 if (!this->threadPool_->isEmpty()) {
                     // computThreadPool can work
-                    this->threadPool_->puttask(std::bind(&TcpConnection::readOverCallback , shared_from_this() , 
-                                                     std::ref(this->computOverBuffer_) , std::ref(this->outputBuffer_)));
+                    this->threadPool_->puttask(std::bind(&TcpConnection::readOverCallback , shared_from_this()));
                 }
                 else {
                     // no computThreadPool
-                    this->readOverCallback(this->computOverBuffer_ , this->outputBuffer_);
+                    this->readOverCallback();
                 }
             }
             else if (this->writeFunction_) {
@@ -60,22 +59,25 @@ void TcpConnection::onMessageCallback() {
     }
     else {
         // handle error
+        LOG(ERROR , "onMessageCallback error");
     }
 }
 
-void TcpConnection::readOverCallback(Buffer& computBuf , Buffer& outputBuf) {
+void TcpConnection::readOverCallback() {
     this->computFunction_(shared_from_this());
-    this->loop_->runInLoop(std::bind(&TcpConnection::computOverCallback , shared_from_this() , std::ref(this->outputBuffer_)));
+    this->loop_->runInLoop(std::bind(&TcpConnection::computOverCallback , shared_from_this()));
 }  
 
-void TcpConnection::computOverCallback(Buffer& outputBuf) {
+void TcpConnection::computOverCallback() {
     if (this->writeFunction_) {
         this->writeFunction_(shared_from_this());
     }
+    // if outputBuf have some messages
     // send the outputBuf
-    if (this->outputBuffer_.readableBytes()) {
-        this->send();
-    }
+
+    // if (this->outputBuffer_.readableBytes()) {
+    //     this->send();
+    // }
 }
 
 void TcpConnection::handleRead() {
@@ -145,6 +147,10 @@ void TcpConnection::handleWrite() {
     this->loop_->assertInLoopThread();
     if (this->channel_->isWriting()) {
         ssize_t n = ::write(this->channel_->fd() , this->outputBuffer_.peek() , this->outputBuffer_.readableBytes());
+        // if (n == 0) {
+        //     std::cout << outputBuffer_.peek() << std::endl;
+        //     std::cout << outputBuffer_.readableBytes() << std::endl;
+        // }
         if (n > 0) {
             LOG(DEBUG , "Write message %ld bytes Success [fd = %ld] " , n , this->channel_->fd());
             this->outputBuffer_.retrieve(n);
@@ -161,6 +167,7 @@ void TcpConnection::handleWrite() {
         }
         else {
             LOG(ERROR , "TcpConnection::handleWrite");
+            this->channel_->disableWriting();
         }
     }
     else {

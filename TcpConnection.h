@@ -47,9 +47,9 @@ public:
 
     EventLoop* getLoop() { return this->loop_; }
 
-    Buffer inputBuffer_;
-    Buffer computOverBuffer_;
-    Buffer outputBuffer_;
+    Buffer* inputBuffer() { return &(this->inputBuffer_); }
+    Buffer* computOverBuffer() { return &(this->computOverBuffer_); }
+    Buffer* outputBuffer() { return &(this->outputBuffer_); }
 
 private:
     enum State { cConnecting , cConnected , cDisconnected , cDisconnecting , };
@@ -62,8 +62,8 @@ private:
 
     void onMessageCallback();
     // called by onMessageCallback
-    void readOverCallback(Buffer& computBuf , Buffer& outputBuf);
-    void computOverCallback(Buffer& outputBuf);
+    void readOverCallback();
+    void computOverCallback();
 
     void setState(State state) { this->state_ = state; }
 
@@ -90,6 +90,10 @@ private:
 
     int connectionId_;
     State state_;
+
+    Buffer inputBuffer_;
+    Buffer computOverBuffer_;
+    Buffer outputBuffer_;
 };
 
 typedef std::shared_ptr<TcpConnection> TcpConnectionPtr;
