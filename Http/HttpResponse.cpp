@@ -1,4 +1,5 @@
 #include "HttpResponse.h"
+#include <string>
 
 namespace grt
 {
@@ -14,7 +15,7 @@ HttpResponse::~HttpResponse() {
 
 }
 
-void HttpResponse::AddHeader(const std::string& key , const std::string value) {
+void HttpResponse::AddHeader(const std::string& key , const std::string& value) {
     if (this->KeyValueMessage.find(key) != this->KeyValueMessage.end()) 
         this->KeyValueMessage.erase(key);
     this->KeyValueMessage.insert(std::make_pair(key , value));
@@ -27,6 +28,9 @@ void HttpResponse::SetStatusCode(const std::string& statusCode , const std::stri
 
 void HttpResponse::SetResponseBody(const std::string& responseBody) {
     this->responseBody = responseBody;
+    size_t bodyLength = responseBody.length();
+    std::string length = std::to_string(static_cast<int>(bodyLength));
+    this->AddHeader("Content-Length" , length);
 }
 
 void HttpResponse::setHttpVersion(const std::string& httpVersion) {

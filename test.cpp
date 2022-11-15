@@ -28,16 +28,12 @@ void computFunction(const TcpConnectionPtr& conn) {
         hr.setHttpVersion(hq.HttpVersion());
         if (hq.RequestURL() == "/FAV") {
             hr.SetResponseBody("NB");
-            // hr.AddHeader("Content-Length" , "1321");
-            hr.AddHeader("Content-Length" , "2");
         }
         else if (hq.RequestURL() == "/favicon.ico") {
             hr.SetResponseBody("TEMP");
-            hr.AddHeader("Content-Length" , "4");
         }
         else {
             hr.SetResponseBody("Hello World");
-            hr.AddHeader("Content-Length" , "11");
         }
         hr.SetStatusCode("200" , "OK");
         hr.AddHeader("Content-Type" , "text/plain;charset=utf-8");

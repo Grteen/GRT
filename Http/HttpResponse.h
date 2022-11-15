@@ -11,7 +11,7 @@ public:
     HttpResponse();
     ~HttpResponse();
 
-    void AddHeader(const std::string& key , const std::string value);
+    void AddHeader(const std::string& key , const std::string& value);
     void SetStatusCode(const std::string& statusCode , const std::string& status);
     void SetResponseBody(const std::string& responseBody);
     void setHttpVersion(const std::string& httpVersion);
