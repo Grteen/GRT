@@ -1,0 +1,37 @@
+set(net_srcs
+    Acceptor.cpp
+    BlockingQueue.cpp
+    Buffer.cpp
+    Callback.h
+    Channel.cpp
+    Epoller.cpp
+    EventLoop.cpp
+    EventLoopThread.cpp
+    EventLoopThreadPool.cpp
+    InetAddr.cpp
+    Socket.cpp
+    Sockets.cpp
+    TcpConnection.cpp
+    TcpServer.cpp
+    ThreadPool.cpp
+    Timer.cpp
+    TimerQueue.cpp
+    
+    Acceptor.h
+    BlockingQueue.h
+    Buffer.h
+    Channel.h
+    Epoller.h
+    EventLoop.h
+    EventLoopThread.h
+    EventLoopThreadPool.h
+    InetAddr.h
+    Socket.h
+    Sockets.h
+    TcpConnection.h
+    TcpServer.h
+    ThreadPool.h
+    Timer.h
+    TimerQueue.h
+)
+add_library(grt_net_lib ${net_srcs})
