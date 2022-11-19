@@ -147,10 +147,6 @@ void TcpConnection::handleWrite() {
     this->loop_->assertInLoopThread();
     if (this->channel_->isWriting()) {
         ssize_t n = ::write(this->channel_->fd() , this->outputBuffer_.peek().c_str() , this->outputBuffer_.readableBytes());
-        // if (n == 0) {
-        //     std::cout << outputBuffer_.peek() << std::endl;
-        //     std::cout << outputBuffer_.readableBytes() << std::endl;
-        // }
         if (n > 0) {
             LOG(DEBUG , "Write message %ld bytes Success [fd = %ld] " , n , this->channel_->fd());
             this->outputBuffer_.retrieve(n);

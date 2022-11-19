@@ -43,7 +43,7 @@ HttpMessage::~HttpMessage() {
 }
 
 void HttpMessage::ParseHttpMessageByLines(std::vector<std::string>& rawMessageLines) {
-    std::regex reg("([0-9A-z]+): ([^ \r\n]+)");
+    std::regex reg("([^\r\n]+): ([^ \r\n]+)");
     std::smatch sm;
     for (auto line : rawMessageLines) {
         regex_search(line , sm , reg);
@@ -59,6 +59,9 @@ void HttpMessage::ParseHttpMessage(std::string& httpMessage) {
 std::string HttpMessage::HasContentLength() {
     auto iter = this->KeyValueMessage.find("Content-Length");
     if (iter == this->KeyValueMessage.end()) {
+        return "";
+    }
+    else if (iter->second == "0") {
         return "";
     }
     else {

@@ -15,8 +15,8 @@ size_t HttpHave(std::string& targetString) {
     std::string httpHeaders(targetString.begin() , targetString.begin() + headerLength);
     http::HttpRequest hq;
     hq.ParseHttpMessage(httpHeaders);
-    // do not have the header Content-Length
     std::string bodyLength = hq.HasContentLength();
+    // do not have the header Content-Length
     if (bodyLength == "") {
         return headerLength;
     }
@@ -67,11 +67,21 @@ void HttpRequest::ParseHttpVersion(std::string& requestLine) {
     this->httpVersion = sm[1];
 }
 
+void HttpRequest::ParseRequestBody(std::string& requestLine) {
+    std::regex reg("[.\\s\\S]+\r\n\r\n([.\\s\\S]+)\r\n");
+    std::smatch sm;
+    regex_search(requestLine , sm , reg);
+    this->requestBody = sm[1];
+}
+
 void HttpRequest::ParseAll(std::string& HttpRequest) {
     this->ParseHttpMessage(HttpRequest);
     this->ParseURL(HttpRequest);
     this->ParseRequestWay(HttpRequest);
     this->ParseHttpVersion(HttpRequest);
+    if (this->requestWay == "POST") {
+        this->ParseRequestBody(HttpRequest);
+    }
 }
 
 }

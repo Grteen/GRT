@@ -20,11 +20,12 @@ void computFunction(const TcpConnectionPtr& conn) {
     }
     while (length <= conn->inputBuffer()->readableBytes()) {
         string http = conn->inputBuffer()->retrieveAsString(length);
-        // cout << http << endl;
-        length = http::HttpHave(str);
         http::HttpRequest hq;
         http::HttpResponse hr;
         hq.ParseAll(http);
+        if (hq.RequestWay() == "POST") {
+            cout << hq.RequestBody() << endl;
+        }
         hr.setHttpVersion(hq.HttpVersion());
         if (hq.RequestURL() == "/FAV") {
             hr.SetResponseBody("NB");
@@ -37,6 +38,7 @@ void computFunction(const TcpConnectionPtr& conn) {
         }
         hr.SetStatusCode("200" , "OK");
         hr.AddHeader("Content-Type" , "text/plain;charset=utf-8");
+        hr.AddHeader("Access-Control-Allow-Origin", "*");
         conn->outputBuffer()->append(hr.GenerateResponseString());
     }
 }
@@ -54,7 +56,7 @@ void onConnection(const TcpConnectionPtr& conn) {
 
 int main(void) {
     EventLoop loop;
-    InetAddr listenAddr(9877);
+    InetAddr listenAddr(9876);
     TcpServer server(&loop , listenAddr);
     
 

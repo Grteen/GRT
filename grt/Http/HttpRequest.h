@@ -20,12 +20,14 @@ public:
     std::string HttpVersion() { return this->httpVersion; }
     std::string RequestWay() { return this->requestWay; }
     std::string RequestURL() { return this->requestURL; }
+    std::string RequestBody() { return this->requestBody; }
     std::unordered_map<std::string , std::string> KeyValueURL() { return this->keyValueURL; }
 private:
     void ParseURL(std::string& URL);
     void ParseURLByLines(std::vector<std::string>& URLlines);
     void ParseRequestWay(std::string& requestLine);
     void ParseHttpVersion(std::string& requestLine);
+    void ParseRequestBody(std::string& requestLine);
 private:
     // request line
     // GET or POST
@@ -36,6 +38,8 @@ private:
     std::unordered_map<std::string , std::string> keyValueURL;
     // Http Version
     std::string httpVersion;
+    // POST's body
+    std::string requestBody;
 };
 
 }
