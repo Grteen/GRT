@@ -50,6 +50,10 @@ void HttpRequest::ParseURL(std::string& URL) {
     std::string regexString = "&";
     std::vector<std::string> URLlines = URLSplit(this->requestURL , regexString);
     this->ParseURLByLines(URLlines);
+
+    std::regex rg("[^ ]+ ([^? ]+)");
+    regex_search(URL , sm , rg);
+    this->requestPath = sm[1];
 }
 
 void HttpRequest::ParseRequestWay(std::string& requestLine) {

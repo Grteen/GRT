@@ -22,6 +22,7 @@ public:
     std::string HttpVersion() { return this->httpVersion; }
     std::string RequestWay() { return this->requestWay; }
     std::string RequestURL() { return this->requestURL; }
+    std::string RequestPath() { return this->requestPath; }
     std::string RequestBody() { return this->requestBody; }
     std::unordered_map<std::string , std::string> KeyValueURL() { return this->keyValueURL; }
     std::string GetURLByKey(const std::string& first);
@@ -37,6 +38,8 @@ private:
     std::string requestWay;
     // URL
     std::string requestURL;
+    // URL without parmeter
+    std::string requestPath;
     // parseURL
     std::unordered_map<std::string , std::string> keyValueURL;
     // Http Version
