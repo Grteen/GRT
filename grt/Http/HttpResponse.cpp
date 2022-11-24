@@ -33,6 +33,13 @@ void HttpResponse::SetResponseBody(const std::string& responseBody) {
     this->AddHeader("Content-Length" , length);
 }
 
+void HttpResponse::AddResponseBody(const std::string& responseBody) {
+    this->responseBody += responseBody;
+    size_t bodyLength = this->responseBody.length();
+    std::string length = std::to_string(static_cast<int>(bodyLength));
+    this->AddHeader("Content-Length" , length);
+}
+
 void HttpResponse::setHttpVersion(const std::string& httpVersion) {
     this->httpVersion = httpVersion;
 }

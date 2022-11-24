@@ -23,9 +23,6 @@ void computFunction(const TcpConnectionPtr& conn) {
         http::HttpRequest hq;
         http::HttpResponse hr;
         hq.ParseAll(http);
-        if (hq.RequestWay() == "POST") {
-            cout << hq.RequestBody() << endl;
-        }
         hr.setHttpVersion(hq.HttpVersion());
         if (hq.RequestURL() == "/FAV") {
             hr.SetResponseBody("NB");
@@ -36,15 +33,29 @@ void computFunction(const TcpConnectionPtr& conn) {
         else {
             hr.SetResponseBody("Hello World");
         }
+        
+        std::string id = hq.GetURLByKey("id");
+        std::string name = hq.GetURLByKey("name");
+        if (id != NOTFINDURLKEY) {
+            hr.AddResponseBody("\n" + id);
+        }
+        if (name != NOTFINDURLKEY) {
+            hr.AddResponseBody("\n" + name);
+        }
+
+        if (hq.RequestWay() == "POST") {
+            hr.AddResponseBody(hq.RequestBody());
+        }
+        
         hr.SetStatusCode("200" , "OK");
         hr.AddHeader("Content-Type" , "text/plain;charset=utf-8");
         hr.AddHeader("Access-Control-Allow-Origin", "*");
         conn->outputBuffer()->append(hr.GenerateResponseString());
+        LOG(INFO , "%s" , "message send ok");
     }
 }
 
 void writeFunction(const TcpConnectionPtr& conn) {
-    LOG(INFO , "%s" , "message send ok");
     if (conn->outputBuffer()->readableBytes()) {
         conn->send();
     }
@@ -56,7 +67,7 @@ void onConnection(const TcpConnectionPtr& conn) {
 
 int main(void) {
     EventLoop loop;
-    InetAddr listenAddr(9876);
+    InetAddr listenAddr(9877);
     TcpServer server(&loop , listenAddr);
     
 

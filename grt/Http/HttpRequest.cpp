@@ -21,7 +21,7 @@ size_t HttpHave(std::string& targetString) {
         return headerLength;
     }
     else {
-        return headerLength + stoi(bodyLength) + 2;
+        return headerLength + stoi(bodyLength);
     }
 }
 
@@ -34,7 +34,7 @@ HttpRequest::~HttpRequest() {
 }
 
 void HttpRequest::ParseURLByLines(std::vector<std::string>& URL) {
-    std::regex reg("([0-9A-z]+)=([^ \r\n]+)");
+    std::regex reg("([^? ]+)=([^ \r\n]+)");
     std::smatch sm;
     for (auto line : URL) {
         regex_search(line , sm , reg);
@@ -47,8 +47,9 @@ void HttpRequest::ParseURL(std::string& URL) {
     std::smatch sm;
     regex_search(URL , sm , reg);
     this->requestURL = sm[1];
-    // std::vector<std::string> URLlines = URLSplit(URL);
-    // this->ParseURLByLines(URLlines);
+    std::string regexString = "&";
+    std::vector<std::string> URLlines = URLSplit(this->requestURL , regexString);
+    this->ParseURLByLines(URLlines);
 }
 
 void HttpRequest::ParseRequestWay(std::string& requestLine) {
@@ -68,7 +69,7 @@ void HttpRequest::ParseHttpVersion(std::string& requestLine) {
 }
 
 void HttpRequest::ParseRequestBody(std::string& requestLine) {
-    std::regex reg("[.\\s\\S]+\r\n\r\n([.\\s\\S]+)\r\n");
+    std::regex reg("[.\\s\\S]+\r\n\r\n([.\\s\\S]+)");
     std::smatch sm;
     regex_search(requestLine , sm , reg);
     this->requestBody = sm[1];
@@ -81,6 +82,16 @@ void HttpRequest::ParseAll(std::string& HttpRequest) {
     this->ParseHttpVersion(HttpRequest);
     if (this->requestWay == "POST") {
         this->ParseRequestBody(HttpRequest);
+    }
+}
+
+std::string HttpRequest::GetURLByKey(const std::string& first) {
+    auto res_it = this->keyValueURL.find(first);
+    if (res_it != this->keyValueURL.end()) {
+        return res_it->second;
+    }
+    else {
+        return NOTFINDURLKEY;
     }
 }
 

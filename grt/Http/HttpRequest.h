@@ -6,6 +6,8 @@ namespace grt
 namespace http
 {
 
+#define NOTFINDURLKEY "NOTFINDURLKEY"
+
 // used to find the complete http message
 size_t HttpHave(std::string& targetString);
 
@@ -22,6 +24,7 @@ public:
     std::string RequestURL() { return this->requestURL; }
     std::string RequestBody() { return this->requestBody; }
     std::unordered_map<std::string , std::string> KeyValueURL() { return this->keyValueURL; }
+    std::string GetURLByKey(const std::string& first);
 private:
     void ParseURL(std::string& URL);
     void ParseURLByLines(std::vector<std::string>& URLlines);
