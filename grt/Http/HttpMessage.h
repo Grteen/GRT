@@ -24,9 +24,11 @@ public:
     virtual ~HttpMessage();
 
     std::string HasContentLength();
+    std::string GetHeaderByKey(const std::string& first);
     void ParseHttpMessage(std::string& httpMessage);
 protected:
     void ParseHttpMessageByLines(std::vector<std::string>& rawMessageLines);
+    void ParseBoundary(const std::string& type);
 protected:
     // response or request's headers
     std::unordered_map<std::string , std::string> KeyValueMessage;

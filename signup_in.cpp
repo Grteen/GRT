@@ -8,6 +8,7 @@
 #include <time.h>
 #include <stdlib.h>
 #include <memory>
+#include <fstream>
 
 #include <cppconn/driver.h>
 #include <cppconn/exception.h>
@@ -23,15 +24,18 @@ typedef std::unique_ptr<sql::Connection> SQLConnPtr;
 typedef std::unique_ptr<sql::PreparedStatement> SQLPtstPtr;
 typedef std::unique_ptr<sql::ResultSet> SQLResPtr;
 
-Redis redis1("tcp://X@127.0.0.1/2");
+Redis redis1("tcp://GrteenFL@127.0.0.1/2");
 
 sql::Driver *driver;
 SQLConnPtr con;
 SQLPtstPtr pstmt;
+SQLResPtr res;
 
 void init() {
     driver = get_driver_instance();
-    con.reset(driver->connect("tcp://127.0.0.1:3306/mydb", "root", "X"));
+    con.reset(driver->connect("tcp://127.0.0.1:3306/mydb", "root", "GrteenFL"));
+    pstmt.reset(con->prepareStatement("create table if not exists account (id varchar(20) primary key , passwd varchar(20) not null)"));
+    pstmt->executeUpdate();
 }
 
 void readFunction(const TcpConnectionPtr& conn) {
@@ -44,6 +48,8 @@ void computFunction(const TcpConnectionPtr& conn) {
     if (length == 0) {
         return;
     }
+    std::cout << length << endl;
+    cout << conn->inputBuffer()->readableBytes() << endl;
     while (length <= conn->inputBuffer()->readableBytes()) {
         string http = conn->inputBuffer()->retrieveAsString(length);
         http::HttpRequest hq;
@@ -54,17 +60,26 @@ void computFunction(const TcpConnectionPtr& conn) {
             std::string id = hq.GetURLByKey("id");
             std::string pw = hq.GetURLByKey("passwd");
             std::string vf = hq.GetURLByKey("verify");
+
             if (id != NOTFINDURLKEY && pw != NOTFINDURLKEY && vf == NOTFINDURLKEY) {
-                srand((unsigned)time(NULL));
-                long long res = rand() % 9000 + 1000;
-                std::pair<std::string , std::string> vfpair = make_pair("verify" , std::to_string(res));
-                std::pair<std::string , std::string> pwpair = make_pair("passwd" , pw);
-                redis1.hmset(id , {
-                    vfpair ,
-                    pwpair
-                });
-                redis1.expire(id , 60);
-                hr.SetResponseBody(std::to_string(res));
+                pstmt.reset(con->prepareStatement("select id from account where id = ?"));
+                pstmt->setString(1 , id);
+                res.reset(pstmt->executeQuery());
+                if (res->next() && res->getString(1) == id) {
+                    hr.SetResponseBody("account have been registered");
+                }
+                else {
+                    srand((unsigned)time(NULL));
+                    long long res = rand() % 9000 + 1000;
+                    std::pair<std::string , std::string> vfpair = make_pair("verify" , std::to_string(res));
+                    std::pair<std::string , std::string> pwpair = make_pair("passwd" , pw);
+                    redis1.hmset(id , {
+                        vfpair ,
+                        pwpair
+                    });
+                    redis1.expire(id , 60);
+                    hr.SetResponseBody(std::to_string(res));
+                }
             }
             else if (id != NOTFINDURLKEY && vf != NOTFINDURLKEY) {
                 auto passwd = redis1.hget(id , "passwd");
@@ -72,7 +87,7 @@ void computFunction(const TcpConnectionPtr& conn) {
                 if (passwd && verify && verify == vf) {
                     redis1.del(id);
                     try {
-                        pstmt.reset(con->prepareStatement("insert into mytb values(? , ?)"));
+                        pstmt.reset(con->prepareStatement("insert into account values(? , ?)"));
                         pstmt->setString(1 , id);
                         pstmt->setString(2 , *passwd);
                         pstmt->executeUpdate();
@@ -89,6 +104,30 @@ void computFunction(const TcpConnectionPtr& conn) {
                 else {
                     hr.SetResponseBody("verify not good");
                 }
+            }
+        }
+        else if (hq.RequestPath() == "/signin") {
+            std::string id = hq.GetURLByKey("id");
+            std::string pw = hq.GetURLByKey("passwd");
+            pstmt.reset(con->prepareStatement("select id , passwd from account where id = ?"));
+            pstmt->setString(1 , id);
+            res.reset(pstmt->executeQuery());
+            if (res->next() && res->getString(2) == pw) {
+                hr.SetResponseBody("welcome");
+            }
+            else {
+                hr.SetResponseBody("passwd is wrong");
+            }
+        }
+        else if (hq.RequestPath() == "/fileUpload") {
+            std::cout << hq.RequestBody() << std::endl;
+            ofstream fp("./new.jpg" , ios::out | ios::binary);
+            if (!fp) {
+                LOG(INFO , "open error");
+            }
+            else {
+                fp << hq.RequestBody();
+                fp.close();
             }
         }
         else {

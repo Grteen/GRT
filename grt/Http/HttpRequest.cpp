@@ -73,10 +73,22 @@ void HttpRequest::ParseHttpVersion(std::string& requestLine) {
 }
 
 void HttpRequest::ParseRequestBody(std::string& requestLine) {
-    std::regex reg("[.\\s\\S]+\r\n\r\n([.\\s\\S]+)");
-    std::smatch sm;
-    regex_search(requestLine , sm , reg);
-    this->requestBody = sm[1];
+    std::string boundary = this->GetHeaderByKey("boundary");
+    if (boundary != "") {
+        size_t index = requestLine.find("--" + boundary);
+        index += 3;
+        index += boundary.size();
+        size_t endindex = requestLine.rfind(boundary);
+        endindex -= 5;
+        std::string temp(requestLine.begin() + index , requestLine.begin() + endindex);
+        size_t startindex = temp.find("\r\n\r\n") + 4;
+        this->requestBody = std::string(temp.begin() + startindex , temp.end());
+    }
+    else {
+        size_t index = requestLine.find("\r\n\r\n");
+        index += 4;
+        this->requestBody = std::string(requestLine.begin() + index , requestLine.end());
+    }
 }
 
 void HttpRequest::ParseAll(std::string& HttpRequest) {
@@ -85,6 +97,7 @@ void HttpRequest::ParseAll(std::string& HttpRequest) {
     this->ParseRequestWay(HttpRequest);
     this->ParseHttpVersion(HttpRequest);
     if (this->requestWay == "POST") {
+        this->ParseBoundary(this->GetHeaderByKey("Content-Type"));
         this->ParseRequestBody(HttpRequest);
     }
 }

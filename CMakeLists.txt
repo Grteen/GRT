@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.22.1)
 
 project(grt-server)
 
+add_definitions("-Wall -g")
+
 add_executable(${PROJECT_NAME} signup_in.cpp)
 
 add_subdirectory(grt/Base)

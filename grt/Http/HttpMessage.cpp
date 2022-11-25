@@ -23,11 +23,20 @@ std::vector<std::string> URLSplit(std::string& URL , std::string& regexString) {
 }
 
 size_t HttpFind(std::string& targetString) {
-    std::regex reg("([.\\s\\S]+)\r\n\r\n");
-    std::smatch sm;
-    // if regex match the http message
-    if (std::regex_search(targetString , sm , reg) == true) {
-        return sm[0].length();
+    // std::regex reg("([\\S\\s]+)\r\n\r\n");
+    // std::smatch sm;
+    // // if regex match the http message
+    // if (std::regex_search(targetString , sm , reg) == true) {
+    //     std::cout << sm[0] << std::endl;
+    //     return sm[0].length();
+    // }
+    // else {
+    //     return 0;
+    // }
+
+    size_t index = targetString.find("\r\n\r\n");
+    if (index < targetString.size()) {
+        return index + 4;
     }
     else {
         return 0;
@@ -43,12 +52,19 @@ HttpMessage::~HttpMessage() {
 }
 
 void HttpMessage::ParseHttpMessageByLines(std::vector<std::string>& rawMessageLines) {
-    std::regex reg("([^\r\n]+): ([^ \r\n]+)");
+    std::regex reg("([^\r\n]+): ([^\r\n]+)");
     std::smatch sm;
     for (auto line : rawMessageLines) {
         regex_search(line , sm , reg);
         this->KeyValueMessage.insert(std::make_pair(sm[1] , sm[2]));
     }
+}
+
+void HttpMessage::ParseBoundary(const std::string& type) {
+    std::regex reg("[^\r\n]+; ([^\r\n]+)=([^\r\n]+)");
+    std::smatch sm;
+    std::regex_search(type , sm , reg);
+    this->KeyValueMessage.insert(std::make_pair(sm[1] , sm[2]));
 }
 
 void HttpMessage::ParseHttpMessage(std::string& httpMessage) {
@@ -62,6 +78,16 @@ std::string HttpMessage::HasContentLength() {
         return "";
     }
     else if (iter->second == "0") {
+        return "";
+    }
+    else {
+        return iter->second;
+    }
+}
+
+std::string HttpMessage::GetHeaderByKey(const std::string& first) {
+    auto iter = this->KeyValueMessage.find(first);
+    if (iter == this->KeyValueMessage.end()) {
         return "";
     }
     else {
