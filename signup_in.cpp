@@ -48,8 +48,6 @@ void computFunction(const TcpConnectionPtr& conn) {
     if (length == 0) {
         return;
     }
-    std::cout << length << endl;
-    cout << conn->inputBuffer()->readableBytes() << endl;
     while (length <= conn->inputBuffer()->readableBytes()) {
         string http = conn->inputBuffer()->retrieveAsString(length);
         http::HttpRequest hq;
@@ -120,14 +118,12 @@ void computFunction(const TcpConnectionPtr& conn) {
             }
         }
         else if (hq.RequestPath() == "/fileUpload") {
-            std::cout << hq.RequestBody() << std::endl;
-            ofstream fp("./new.jpg" , ios::out | ios::binary);
-            if (!fp) {
-                LOG(INFO , "open error");
-            }
-            else {
-                fp << hq.RequestBody();
-                fp.close();
+            auto formdata = hq.RequestBodyInFormData();
+            for (size_t i = 0 ; i < formdata.size() ; i++) {
+                std::cout << formdata[i].GetValueByKey("name") << std::endl;
+                ofstream of("./" + formdata[i].GetValueByKey("name"));
+                of << formdata[i].ContentBody();
+                of.close();
             }
         }
         else {

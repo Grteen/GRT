@@ -23,19 +23,9 @@ std::vector<std::string> URLSplit(std::string& URL , std::string& regexString) {
 }
 
 size_t HttpFind(std::string& targetString) {
-    // std::regex reg("([\\S\\s]+)\r\n\r\n");
-    // std::smatch sm;
-    // // if regex match the http message
-    // if (std::regex_search(targetString , sm , reg) == true) {
-    //     std::cout << sm[0] << std::endl;
-    //     return sm[0].length();
-    // }
-    // else {
-    //     return 0;
-    // }
-
     size_t index = targetString.find("\r\n\r\n");
-    if (index < targetString.size()) {
+    if (index != std::string::npos) {
+        // "\r\n\r\n"
         return index + 4;
     }
     else {

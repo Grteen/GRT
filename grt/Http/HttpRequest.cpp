@@ -74,20 +74,15 @@ void HttpRequest::ParseHttpVersion(std::string& requestLine) {
 
 void HttpRequest::ParseRequestBody(std::string& requestLine) {
     std::string boundary = this->GetHeaderByKey("boundary");
+    // has bodundary means the form-data content type
     if (boundary != "") {
-        size_t index = requestLine.find("--" + boundary);
-        index += 3;
-        index += boundary.size();
-        size_t endindex = requestLine.rfind(boundary);
-        endindex -= 5;
-        std::string temp(requestLine.begin() + index , requestLine.begin() + endindex);
-        size_t startindex = temp.find("\r\n\r\n") + 4;
-        this->requestBody = std::string(temp.begin() + startindex , temp.end());
+        // get the whole requestBody
+        this->ParseRequestBodyInApplication(requestLine);
+        this->ParseRequestBodyInFormData(this->requestBody);
     }
     else {
-        size_t index = requestLine.find("\r\n\r\n");
-        index += 4;
-        this->requestBody = std::string(requestLine.begin() + index , requestLine.end());
+        // not the form data type
+        this->ParseRequestBodyInApplication(requestLine);
     }
 }
 
@@ -109,6 +104,32 @@ std::string HttpRequest::GetURLByKey(const std::string& first) {
     }
     else {
         return NOTFINDURLKEY;
+    }
+}
+
+void HttpRequest::ParseRequestBodyInApplication(const std::string& requestString) {
+    size_t index = requestString.find("\r\n\r\n");
+    if (index != std::string::npos) {
+        index += 4;
+        this->requestBody = std::string(requestString.begin() + index , requestString.end());
+    }
+}
+
+void HttpRequest::ParseRequestBodyInFormData(const std::string& requestString) {
+    std::string boundary = this->GetHeaderByKey("boundary");
+    size_t separateLength = std::string("--" + boundary + "\r\n").size();
+    size_t startindex = separateLength;
+    size_t finalindex = 0;
+    while (true) {
+        finalindex = requestString.find("--" + boundary , startindex);
+        if (finalindex == std::string::npos) {
+            break;
+        }
+        FormData newForm;
+        std::string formDataPart(requestString.begin() + startindex , requestString.begin() + finalindex);
+        newForm.ParseFormDataAll(formDataPart);
+        this->requestBodyInFormData.push_back(newForm);
+        startindex = finalindex + separateLength;
     }
 }
 

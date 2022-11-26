@@ -1,4 +1,5 @@
 #include "HttpMessage.h"
+#include "FormData.h"
 
 namespace grt
 {
@@ -26,12 +27,15 @@ public:
     std::string RequestBody() { return this->requestBody; }
     std::unordered_map<std::string , std::string> KeyValueURL() { return this->keyValueURL; }
     std::string GetURLByKey(const std::string& first);
+    std::vector<FormData> RequestBodyInFormData() { return this->requestBodyInFormData; }
 private:
     void ParseURL(std::string& URL);
     void ParseURLByLines(std::vector<std::string>& URLlines);
     void ParseRequestWay(std::string& requestLine);
     void ParseHttpVersion(std::string& requestLine);
     void ParseRequestBody(std::string& requestLine);
+    void ParseRequestBodyInApplication(const std::string& requestString);
+    void ParseRequestBodyInFormData(const std::string& requestString);
 private:
     // request line
     // GET or POST
@@ -46,6 +50,8 @@ private:
     std::string httpVersion;
     // POST's body
     std::string requestBody;
+    // POST's formdata
+    std::vector<FormData> requestBodyInFormData;
 };
 
 }
