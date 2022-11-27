@@ -4,7 +4,7 @@ project(grt-server)
 
 add_definitions("-Wall -g")
 
-add_executable(${PROJECT_NAME} signup_in.cpp)
+add_executable(${PROJECT_NAME} image.cpp)
 
 add_subdirectory(grt/Base)
 add_subdirectory(grt/Http)
