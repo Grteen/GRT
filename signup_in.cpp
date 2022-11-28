@@ -2,19 +2,20 @@
 #include "./grt/Http/HttpResponse.h"
 #include "./grt/Http/HttpRequest.h"
 #include "./grt/Log/Log.h"
+#include "./grt/Net/ThreadPool.h"
 #include <iostream>
 #include <regex>
 #include <sw/redis++/redis++.h>
 #include <time.h>
 #include <stdlib.h>
 #include <memory>
-#include <fstream>
 
 #include <cppconn/driver.h>
 #include <cppconn/exception.h>
 #include <cppconn/resultset.h>
 #include <cppconn/statement.h>
 #include <cppconn/prepared_statement.h>
+#include <queue>
 
 using namespace std;
 using namespace grt;
@@ -23,6 +24,7 @@ using namespace sw::redis;
 typedef std::unique_ptr<sql::Connection> SQLConnPtr;
 typedef std::unique_ptr<sql::PreparedStatement> SQLPtstPtr;
 typedef std::unique_ptr<sql::ResultSet> SQLResPtr;
+typedef std::unique_ptr<sql::Statement> SQLStPtr;
 
 Redis redis1("tcp://GrteenFL@127.0.0.1/2");
 
@@ -30,19 +32,17 @@ sql::Driver *driver;
 SQLConnPtr con;
 SQLPtstPtr pstmt;
 SQLResPtr res;
+SQLStPtr stmt;
+
+ThreadPool tp(2);
 
 void init() {
     driver = get_driver_instance();
     con.reset(driver->connect("tcp://127.0.0.1:3306/mydb", "root", "GrteenFL"));
-    pstmt.reset(con->prepareStatement("create table if not exists account (id varchar(20) primary key , passwd varchar(20) not null)"));
-    pstmt->executeUpdate();
+    tp.start();
 }
 
 void readFunction(const TcpConnectionPtr& conn) {
-
-}
-
-void computFunction(const TcpConnectionPtr& conn) {
     string str = (conn->inputBuffer()->peek());
     size_t length = http::HttpHave(str);
     if (length == 0) {
@@ -58,46 +58,35 @@ void computFunction(const TcpConnectionPtr& conn) {
             std::string id = hq.GetURLByKey("id");
             std::string pw = hq.GetURLByKey("passwd");
             std::string vf = hq.GetURLByKey("verify");
-
             if (id != NOTFINDURLKEY && pw != NOTFINDURLKEY && vf == NOTFINDURLKEY) {
-                pstmt.reset(con->prepareStatement("select id from account where id = ?"));
-                pstmt->setString(1 , id);
-                res.reset(pstmt->executeQuery());
-                if (res->next() && res->getString(1) == id) {
-                    hr.SetResponseBody("account have been registered");
-                }
-                else {
-                    srand((unsigned)time(NULL));
-                    long long res = rand() % 9000 + 1000;
-                    std::pair<std::string , std::string> vfpair = make_pair("verify" , std::to_string(res));
-                    std::pair<std::string , std::string> pwpair = make_pair("passwd" , pw);
-                    redis1.hmset(id , {
-                        vfpair ,
-                        pwpair
-                    });
-                    redis1.expire(id , 60);
-                    hr.SetResponseBody(std::to_string(res));
-                }
+                srand((unsigned)time(NULL));
+                long long res = rand() % 9000 + 1000;
+                std::pair<std::string , std::string> vfpair = make_pair("verify" , std::to_string(res));
+                std::pair<std::string , std::string> pwpair = make_pair("passwd" , pw);
+                redis1.hmset(id , {
+                    vfpair ,
+                    pwpair
+                });
+                redis1.expire(id , 60);
+                hr.SetResponseBody(std::to_string(res));
             }
             else if (id != NOTFINDURLKEY && vf != NOTFINDURLKEY) {
                 auto passwd = redis1.hget(id , "passwd");
                 auto verify = redis1.hget(id , "verify");
                 if (passwd && verify && verify == vf) {
                     redis1.del(id);
-                    try {
-                        pstmt.reset(con->prepareStatement("insert into account values(? , ?)"));
-                        pstmt->setString(1 , id);
-                        pstmt->setString(2 , *passwd);
-                        pstmt->executeUpdate();
-                        hr.SetResponseBody("log in ok");
-                    } catch(sql::SQLException &e) {
-                        cout << "# ERR: SQLException in " << __FILE__;
-                        cout << "(" << __FUNCTION__ << ") on line " << __LINE__ << endl;
-                        cout << "# ERR: " << e.what();
-                        cout << " (MySQL error code: " << e.getErrorCode();
-                        cout << ", SQLState: " << e.getSQLState() << " )" << endl;
-                        hr.SetResponseBody("something wrong");
-                    }
+                    tp.puttask([=]() {
+                        try {
+                            pstmt.reset(con->prepareStatement("insert into account values(? , ?)"));
+                            pstmt->setString(1 , id);
+                            pstmt->setString(2 , *passwd);
+                            pstmt->executeUpdate();
+                            LOG(INFO , "running ok in sql");
+                        } catch(sql::SQLException &e) {
+                            LOG(CRIT , "something wrong in sql");
+                        }
+                    });
+                    hr.SetResponseBody("log in ok");
                 }
                 else {
                     hr.SetResponseBody("verify not good");
@@ -107,23 +96,16 @@ void computFunction(const TcpConnectionPtr& conn) {
         else if (hq.RequestPath() == "/signin") {
             std::string id = hq.GetURLByKey("id");
             std::string pw = hq.GetURLByKey("passwd");
-            pstmt.reset(con->prepareStatement("select id , passwd from account where id = ?"));
-            pstmt->setString(1 , id);
-            res.reset(pstmt->executeQuery());
-            if (res->next() && res->getString(2) == pw) {
-                hr.SetResponseBody("welcome");
-            }
-            else {
-                hr.SetResponseBody("passwd is wrong");
-            }
-        }
-        else if (hq.RequestPath() == "/fileUpload") {
-            auto formdata = hq.RequestBodyInFormData();
-            for (size_t i = 0 ; i < formdata.size() ; i++) {
-                std::cout << formdata[i].GetValueByKey("name") << std::endl;
-                ofstream of("./" + formdata[i].GetValueByKey("name"));
-                of << formdata[i].ContentBody();
-                of.close();
+            stmt.reset(con->createStatement());
+            res.reset(stmt->executeQuery("select passwd from account where id = \"" + id + "\"" ));
+            while (res->next()) {
+                std::string password = res->getString(1);
+                if (password == pw) {
+                    hr.SetResponseBody("WELCOME");
+                }
+                else {
+                    hr.SetResponseBody("PASSWD IS NOT TRUE");
+                }
             }
         }
         else {
@@ -154,12 +136,11 @@ int main(void) {
     
     init();
     server.setReadFunction(readFunction);
-    server.setComputFunction(computFunction);
     server.setWriteFunction(writeFunction);
     server.setConnectionCallback(onConnection);
 
-    server.setIOThreadNum(4);
-    server.setComputThreadNum(4);
+    server.setIOThreadNum(8);
+    server.setComputThreadNum(0);
 
     server.start();
     loop.loop();

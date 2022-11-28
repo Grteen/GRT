@@ -35,7 +35,6 @@ void readFunction(const TcpConnectionPtr& conn) {
         }
         else if (hq.RequestPath() == "/picture") {
             hr.SetResponseBody("bm.jpg" , http::FILETYPE::image);
-            cout << "here" << endl;
         }
         else if (hq.RequestPath() == "/test" && hq.RequestWay() == "GET") {
             std::string id = hq.GetURLByKey("id");
@@ -56,11 +55,6 @@ void readFunction(const TcpConnectionPtr& conn) {
     }
 }
 
-// not thread safe be carefule
-void computFunction(const TcpConnectionPtr& conn) {
-
-}
-
 void writeFunction(const TcpConnectionPtr& conn) {
     if (conn->outputBuffer()->readableBytes()) {
         conn->send();
@@ -77,7 +71,6 @@ int main(void) {
     TcpServer server(&loop , listenAddr);
     
     server.setReadFunction(readFunction);
-    server.setComputFunction(computFunction);
     server.setWriteFunction(writeFunction);
     server.setConnectionCallback(onConnection);
 

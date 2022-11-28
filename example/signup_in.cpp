@@ -2,6 +2,7 @@
 #include "./grt/Http/HttpResponse.h"
 #include "./grt/Http/HttpRequest.h"
 #include "./grt/Log/Log.h"
+#include "./grt/Net/ThreadPool.h"
 #include <iostream>
 #include <regex>
 #include <sw/redis++/redis++.h>
@@ -14,6 +15,7 @@
 #include <cppconn/resultset.h>
 #include <cppconn/statement.h>
 #include <cppconn/prepared_statement.h>
+#include <queue>
 
 using namespace std;
 using namespace grt;
@@ -22,23 +24,25 @@ using namespace sw::redis;
 typedef std::unique_ptr<sql::Connection> SQLConnPtr;
 typedef std::unique_ptr<sql::PreparedStatement> SQLPtstPtr;
 typedef std::unique_ptr<sql::ResultSet> SQLResPtr;
+typedef std::unique_ptr<sql::Statement> SQLStPtr;
 
-Redis redis1("tcp://X@127.0.0.1/2");
+Redis redis1("tcp://GrteenFL@127.0.0.1/2");
 
 sql::Driver *driver;
 SQLConnPtr con;
 SQLPtstPtr pstmt;
+SQLResPtr res;
+SQLStPtr stmt;
+
+ThreadPool tp(2);
 
 void init() {
     driver = get_driver_instance();
-    con.reset(driver->connect("tcp://127.0.0.1:3306/mydb", "root", "X"));
+    con.reset(driver->connect("tcp://127.0.0.1:3306/mydb", "root", "GrteenFL"));
+    tp.start();
 }
 
 void readFunction(const TcpConnectionPtr& conn) {
-
-}
-
-void computFunction(const TcpConnectionPtr& conn) {
     string str = (conn->inputBuffer()->peek());
     size_t length = http::HttpHave(str);
     if (length == 0) {
@@ -71,18 +75,36 @@ void computFunction(const TcpConnectionPtr& conn) {
                 auto verify = redis1.hget(id , "verify");
                 if (passwd && verify && verify == vf) {
                     redis1.del(id);
-                    try {
-                        pstmt.reset(con->prepareStatement("insert into mytb values(? , ?)"));
-                        pstmt->setString(1 , id);
-                        pstmt->setString(2 , *passwd);
-                        pstmt->executeUpdate();
-                        hr.SetResponseBody("log in ok");
-                    } catch(sql::SQLException &e) {
-                        hr.SetResponseBody("something wrong");
-                    }
+                    tp.puttask([=]() {
+                        try {
+                            pstmt.reset(con->prepareStatement("insert into account values(? , ?)"));
+                            pstmt->setString(1 , id);
+                            pstmt->setString(2 , *passwd);
+                            pstmt->executeUpdate();
+                            LOG(INFO , "running ok in sql");
+                        } catch(sql::SQLException &e) {
+                            LOG(CRIT , "something wrong in sql");
+                        }
+                    });
+                    hr.SetResponseBody("log in ok");
                 }
                 else {
                     hr.SetResponseBody("verify not good");
+                }
+            }
+        }
+        else if (hq.RequestPath() == "/signin") {
+            std::string id = hq.GetURLByKey("id");
+            std::string pw = hq.GetURLByKey("passwd");
+            stmt.reset(con->createStatement());
+            res.reset(stmt->executeQuery("select passwd from account where id = \"" + id + "\"" ));
+            while (res->next()) {
+                std::string password = res->getString(1);
+                if (password == pw) {
+                    hr.SetResponseBody("WELCOME");
+                }
+                else {
+                    hr.SetResponseBody("PASSWD IS NOT TRUE");
                 }
             }
         }
@@ -114,12 +136,11 @@ int main(void) {
     
     init();
     server.setReadFunction(readFunction);
-    server.setComputFunction(computFunction);
     server.setWriteFunction(writeFunction);
     server.setConnectionCallback(onConnection);
 
-    server.setIOThreadNum(4);
-    server.setComputThreadNum(4);
+    server.setIOThreadNum(8);
+    server.setComputThreadNum(0);
 
     server.start();
     loop.loop();
