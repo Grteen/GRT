@@ -9,6 +9,7 @@
 #include "Socket.h"
 
 #include <memory>
+#include <queue>
 
 namespace grt
 {
@@ -48,7 +49,7 @@ public:
     EventLoop* getLoop() { return this->loop_; }
 
     Buffer* inputBuffer() { return &(this->inputBuffer_); }
-    Buffer* computOverBuffer() { return &(this->computOverBuffer_); }
+    Buffer* extraBuffer() { return &(this->extraBuffer_); }
     Buffer* outputBuffer() { return &(this->outputBuffer_); }
 
 private:
@@ -92,7 +93,7 @@ private:
     State state_;
 
     Buffer inputBuffer_;
-    Buffer computOverBuffer_;
+    Buffer extraBuffer_;
     Buffer outputBuffer_;
 };
 
